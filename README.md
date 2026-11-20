@@ -2,48 +2,36 @@
 
 a static read of the stock firmware on a **Samsung Galaxy Tab A8 (SM-X200)** - the tablet that took [LineageOS](https://lineageos.org), next to the phone that wouldn't.
 
-**the read is in.** the build, the chip, the partition map and verified boot's metadata; why a current GSI fits; the whole bootloader signing chain worked out from the hashes; the two main bootloader stages read for how they check each other, where the unlock state lives and what Knox Guard gates; and the secure world - which TEE this chip runs, what the bootloader asks it, and what keeps apps away from it. there's a LineageOS how-to too, from two real flashes. [`ROADMAP.md`](ROADMAP.md) has the phases; what's still open is listed at the foot of each section of the [teardown](Tab-A8-teardown.md).
+**the read is in**: the firmware's layout, verified boot, why a GSI fits, the bootloader's signing chain and its first two stages, and the secure world. there's a LineageOS how-to from two real flashes too. what's still open is listed at the end of each section of the [teardown](Tab-A8-teardown.md).
 
-the short of it: on this tablet the decisions that matter sit in the **secure world**, not in the bootloader you can read. a little-kernel TEE (Trusty) judges the unlock token and runs the vbmeta check that sets the boot state, and the bootloader goes by its answers. the A10e kept those same decisions in `sboot`, the part you can read. (why each tablet ended where it did is its own story - the A10e stayed on stock because OEM unlocking wasn't allowed on that unit, and its GSI wall was the Treble level; the [comparison](A8-vs-A10e.md) has both.)
+the short of it: on this tablet the bootloader doesn't decide alone. it asks a **secure world** (Trusty) whether the unlock is genuine and whether the boot image passes, and sets the boot colour from the answers. the A10e kept those decisions in `sboot`, the part you can read.
 
 new to this? [the plain version](Tab-A8-teardown.md#the-plain-version) is six short points with no addresses.
 
 ## what this is for
 
-this is the sibling to [a10e-firmware](https://github.com/CassieFox23/a10e-firmware). that one is about a Galaxy A10e that's locked down and stays on stock - so it ended up being a read of how a phone decides what it's allowed to boot.
-
-the Tab A8 went the other way, it's running a LineageOS GSI. so the plan here is to ask the same questions of the tablet and put the two answers side by side:
+the sibling to [a10e-firmware](https://github.com/CassieFox23/a10e-firmware), a phone that's locked down and stays on stock. the Tab A8 went the other way and runs a LineageOS GSI, so this asks the same questions of the tablet and puts the answers [side by side](A8-vs-A10e.md):
 
 - what does the bootloader check before it boots something, and what changes once it's unlocked?
 - what does verified boot ([AVB](https://android.googlesource.com/platform/external/avb/)) do on this one?
 - why does a GSI fit here when it couldn't on the A10e?
 - what's the secure world on this chip, and what keeps apps away from it?
 
-the tablet is a different chip family too - Samsung's kernel source for it is a Unisoc (Spreadtrum) tree, where the A10e is Exynos. so the bootloader won't look the same, and the A10e scripts won't just carry over.
-
-there's also a [how-to](docs/lineageos-howto.md) for putting LineageOS on the tablet, since that part actually worked.
-
 ## what's in here
 
 | path | what it is |
 |---|---|
-| [`Tab-A8-teardown.md`](Tab-A8-teardown.md) | the writeup - the full read, each section ending with what's still open |
-| [`A8-vs-A10e.md`](A8-vs-A10e.md) | the tablet next to the phone - every cell filled, the A10e side links to its teardown |
+| [`Tab-A8-teardown.md`](Tab-A8-teardown.md) | the write-up |
+| [`A8-vs-A10e.md`](A8-vs-A10e.md) | the tablet next to the phone |
+| [`docs/lineageos-howto.md`](docs/lineageos-howto.md) | LineageOS on the tablet: what was done, and what wasn't tested |
 | [`docs/partition-map.md`](docs/partition-map.md) | all 58 partitions from the PIT |
-| [`docs/lineageos-howto.md`](docs/lineageos-howto.md) | the LineageOS how-to - what was done on two tablets, and what wasn't tested |
-| [`docs/how-the-code-was-read.md`](docs/how-the-code-was-read.md) | the REA + Ghidra tools that read the bootloader and secure world, and what each is for |
+| [`docs/how-the-code-was-read.md`](docs/how-the-code-was-read.md) | the tools that read the bootloader and the secure world |
 | [`docs/what-it-took.md`](docs/what-it-took.md) | tool calls, tokens and an API-price cost estimate for building the repo |
-| `figures/` | pictures - the charts are made by scripts in `tools/`, the diagrams are screenshots of the archify pages |
-| `.archify/workflow-tab-a8-flash-20261120-144800/` | the whole flash as one flow diagram - standalone HTML + its source |
-| `.archify/tree-tab-a8-vbmeta-20261120-145200/` | what vbmeta covers, as a tree - standalone HTML + its source |
-| `.archify/tree-tab-a8-signing-chain-20261120-151500/` | who signs what in the bootloader files - standalone HTML + its source |
-| `.archify/workflow-tab-a8-boot-chain-20261120-154500/` | the boot chain, who checks whom - standalone HTML + its source |
-| `.archify/arch-tab-a8-secure-world-20261120-162600/` | the secure world and the fence around it - standalone HTML + its source |
-| `.archify/arch-tab-a8-vs-a10e-20261120-163500/` | the two devices side by side - standalone HTML + its source |
-| `.archify/workflow-tab-a8-power-on-20261120-172500/` | what happens when you press power - standalone HTML + its source |
-| `.archify/workflow-tab-a8-unlock-20261120-173000/` | the unlock, step by step - standalone HTML + its source |
 | [`tools/`](tools/README.md) | eleven small scripts |
-| [`ROADMAP.md`](ROADMAP.md) | the phases, and what's still open |
+| `figures/` | the pictures: charts drawn by `tools/`, diagrams from the pages below |
+| `.archify/` | eight diagrams as standalone pages with their sources: the flash, vbmeta, the signing chain, the boot chain, the secure world, the two devices, power on, the unlock |
+| `.blueprint/` | the source of the animated power-on sheet |
+| [`ROADMAP.md`](ROADMAP.md) | the phases |
 
 ## get the files
 
@@ -67,4 +55,4 @@ this is a personal project. issues are welcome, pull requests aren't expected - 
 
 ## license
 
-the scripts and the write-up are [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html) - see [`LICENSE`](LICENSE). holder: Cassie_Fox. the `.archify/` diagrams were made with [archify](https://github.com/tt-a1i/archify), and the generated pages carry its runtime and the [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) font ([OFL-1.1](https://openfontlicense.org)) under their own licenses.
+the scripts and the write-up are [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html) - see [`LICENSE`](LICENSE). holder: Cassie_Fox. the `.archify/` diagrams were made with [archify](https://github.com/tt-a1i/archify), and the generated pages carry its runtime and the [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) font ([OFL-1.1](https://openfontlicense.org)) under their own licenses. the animated power-on sheet was drawn with [blueprint](https://github.com/intincrab/blueprint) (MIT); only its pictures are here, not its code.
