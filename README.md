@@ -2,7 +2,7 @@
 
 poking at the stock firmware on a **Samsung Galaxy Tab A8 (SM-X200)** - the tablet that took [LineageOS](https://lineageos.org), next to the phone that wouldn't.
 
-**early days.** the first pass is in - the build, the chip, the partition map, verified boot's metadata and why a GSI fits. the bootloader and the secure world haven't been read yet, and the how-to isn't written. [`ROADMAP.md`](ROADMAP.md) says what's next.
+**early days.** the first pass is in - the build, the chip, the partition map, verified boot's metadata and why a GSI fits - and so is the LineageOS how-to. the bootloader and the secure world haven't been read yet. [`ROADMAP.md`](ROADMAP.md) says what's next.
 
 ## what this is for
 
@@ -17,7 +17,7 @@ the Tab A8 went the other way, it's running a LineageOS GSI. so the plan here is
 
 the tablet is a different chip family too - Samsung's kernel source for it is a Unisoc (Spreadtrum) tree, where the A10e is Exynos. so the bootloader won't look the same, and the A10e scripts won't just carry over.
 
-there's also going to be a how-to for putting LineageOS on the tablet, since that part actually worked.
+there's also a [how-to](docs/lineageos-howto.md) for putting LineageOS on the tablet, since that part actually worked.
 
 ## what's in here
 
@@ -26,7 +26,7 @@ there's also going to be a how-to for putting LineageOS on the tablet, since tha
 | [`Tab-A8-teardown.md`](Tab-A8-teardown.md) | the writeup - the first pass is in, the rest is still questions |
 | [`A8-vs-A10e.md`](A8-vs-A10e.md) | the tablet next to the phone - the A10e side links to its teardown, the tablet side fills in as it's read |
 | [`docs/partition-map.md`](docs/partition-map.md) | all 58 partitions from the PIT |
-| [`docs/lineageos-howto.md`](docs/lineageos-howto.md) | the LineageOS how-to - not written yet |
+| [`docs/lineageos-howto.md`](docs/lineageos-howto.md) | the LineageOS how-to - what was done on two tablets, and what wasn't tested |
 | [`tools/`](tools/README.md) | three small scripts so far |
 | [`ROADMAP.md`](ROADMAP.md) | what's planned, phase by phase |
 

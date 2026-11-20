@@ -26,11 +26,11 @@ finish line: those rows of [`A8-vs-A10e.md`](A8-vs-A10e.md) are filled, each wit
 
 ## phase 2 - the LineageOS how-to
 
-- [ ] the steps, written from the commands that were actually run
-- [ ] every step checked a second time before it goes in
-- [ ] what the tablet ends up running
-- [ ] how to go back to stock
-- [ ] what broke along the way
+- [x] the steps, written from the commands that were actually run
+- [x] every step checked a second time before it goes in
+- [x] what the tablet ends up running
+- [ ] how to go back to stock - only the recovery partition has been written back so far, the full restore is untested
+- [x] what broke along the way
 - [ ] picture: the whole flash as one flow, with the way back to stock
 
 finish line: [`docs/lineageos-howto.md`](docs/lineageos-howto.md) has no step that wasn't run on a real SM-X200.

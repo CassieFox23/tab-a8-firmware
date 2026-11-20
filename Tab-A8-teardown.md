@@ -82,6 +82,8 @@ lpunpack -p vendor -p system super.raw .    # gives the vendor.img and system.im
 
 one thing the firmware does say: the vendor's `default.prop` has `ro.oem_unlock_supported=1`. the A10e had that same line and still wouldn't unlock, so on its own it settles nothing.
 
+what settles it is the tablet: it does unlock. the OEM unlocking switch is there, a long press in Download Mode does the unlock and the wipe, and `ro.boot.flash.locked` reads `0` afterwards. the steps are in the [how-to](docs/lineageos-howto.md). before the unlock, the Download Mode screen read `OEM LOCK` on and `KG STATE` completed.
+
 ## verified boot
 
 what `vbmeta.img` says, read with `avbtool info_image --image vbmeta.img`:
@@ -96,10 +98,13 @@ what `vbmeta.img` says, read with `avbtool info_image --image vbmeta.img`:
 
 that key isn't the A10e's (`e553992a79ab561a4805371cce123d1ee73db21b`).
 
+one thing seen on the real tablets, from the flash logs in the [how-to](docs/lineageos-howto.md): with the bootloader unlocked, a `system` image that isn't Samsung's booted with the stock `vbmeta` left exactly as it was. no vbmeta was flashed and nothing was disabled. afterwards the tablet reported `ro.boot.verifiedbootstate` as `orange`. so once it's unlocked, the hashtree for `system` in vbmeta doesn't stop a different system from starting. that's what happened, not a read of the code that decides it.
+
 *not read yet:*
 
 - where the bootloader keeps the key it trusts
-- what the bootloader does with an image signed by another key, locked and unlocked
+- what the bootloader does with an image signed by another key while **locked**
+- the code path behind the unlocked behaviour above
 
 ## why a GSI fits
 
