@@ -81,7 +81,7 @@ mkdir ap
 tar -xf AP_X200XXS6DYG6_*.tar.md5 -C ap recovery.img super.img vbmeta.img vbmeta_system.img boot.img
 ```
 
-only `recovery.img` is needed for the flash. for this build it's 67108864 bytes:
+only `recovery.img` is needed for the flash - the other four were pulled for the teardown, so leave them out if all you want is LineageOS. for this build `recovery.img` is 67108864 bytes:
 
 ```
 c8cfcb64a7330ae215a536e3dad9a982030e01e77f55faa4b6facefc97157589  recovery.img
@@ -109,7 +109,7 @@ power the tablet off. hold **both volume keys** and plug the cable into the PC w
 - **long press Volume Up** - device unlock mode. this is the wipe. not yet.
 - **Volume Down** - cancel.
 
-short press. before unlocking, the Download Mode screen read `OEM LOCK` on and `KG STATE` completed. on the PC, `lsusb` shows the tablet as `04e8:685d`.
+short press. before unlocking, the Download Mode screen read `OEM LOCK` on and `KG STATE` completed (the label in the bootloader's own strings is `KG STATUS`, so that wording may not be letter for letter). on the PC, `lsusb` shows the tablet as `04e8:685d`.
 
 once Android is running with USB debugging on, you don't need the key combo any more:
 
@@ -125,7 +125,7 @@ samloader flash -p 38 ap/recovery.img
 
 it ends with `recovery flash successful` and the tablet reboots. the first time round the tablet was then booted into recovery (`adb reboot recovery`), the stock recovery menu showed, and it booted to Android fine.
 
-`38` is the recovery partition's id in this tablet's partition table - it's in the [partition map](partition-map.md). check yours matches before using the number.
+`38` is the recovery partition's id in this tablet's partition table - it's in the [partition map](partition-map.md), in the second column next to the name, not the row number in the first. a wrong number writes to a different partition, so check yours with `samloader print-pit` before using it.
 
 ## 5. unlock the bootloader
 
@@ -134,7 +134,7 @@ it ends with `recovery flash successful` and the tablet reboots. the first time 
 1. power off.
 2. hold both volume keys and plug in, same as before.
 3. on the warning screen, **long press Volume Up**.
-4. confirm on the next screen. the screen says which key - it wasn't written down.
+4. confirm on the next screen. the screen says which key *(done by hand, the key wasn't written down)*.
 5. the tablet wipes itself and restarts.
 
 it sits on the Samsung logo long enough to look like a boot loop. it wasn't one, either time. from then on there's a warning at startup about the unlocked bootloader.
@@ -154,11 +154,12 @@ orange
 1
 ```
 
-`flash.locked` `0` and `orange` are the unlocked bootloader.
+`flash.locked` `0` and `orange` are the unlocked bootloader. the third line is `ro.boot.warranty_bit` as the tablet reported it - what sets it wasn't read, so don't take that `0` as proof of anything.
 
 ## 6. flash TWRP
 
 ```
+mkdir twrp && tar -xf twrp.tar -C twrp      # the shape of it - the exact unpack command wasn't kept in the log
 adb reboot download
 samloader flash --no-reboot -p 38 twrp/recovery.img
 ```

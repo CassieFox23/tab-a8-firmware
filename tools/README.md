@@ -1,6 +1,6 @@
 # tools
 
-small python scripts, standard library only, apart from matplotlib for the charts and numpy for `pin_base.py`. each takes file paths as arguments, so keep the firmware wherever you like.
+small python scripts, standard library only, apart from matplotlib for the charts and numpy for `pin_base.py`. most take file paths as arguments, so keep the firmware wherever you like. `pit_table.py` and `partition_chart.py` read `samloader print-pit` output on stdin instead. the three charts with their numbers written in (`memory_map_chart.py`, `treble_fit_chart.py`, `tool_calls_chart.py`) redraw their picture in `figures/` unless you give them another path.
 
 | script | what it does | needs |
 |---|---|---|
