@@ -27,8 +27,8 @@ there's also a [how-to](docs/lineageos-howto.md) for putting LineageOS on the ta
 | [`A8-vs-A10e.md`](A8-vs-A10e.md) | the tablet next to the phone - the A10e side links to its teardown, the tablet side fills in as it's read |
 | [`docs/partition-map.md`](docs/partition-map.md) | all 58 partitions from the PIT |
 | [`docs/lineageos-howto.md`](docs/lineageos-howto.md) | the LineageOS how-to - what was done on two tablets, and what wasn't tested |
-| `figures/` | charts - the partition map so far, made by `tools/partition_chart.py` |
-| `.archify/workflow-tab-a8-flash-20261120-144800/` | the whole flash as one flow diagram - standalone HTML, open it in a browser |
+| `figures/` | pictures - the partition map (made by `tools/partition_chart.py`) and the flash flow (a screenshot of the archify page) |
+| `.archify/workflow-tab-a8-flash-20261120-144800/` | the whole flash as one flow diagram - standalone HTML + its source |
 | [`tools/`](tools/README.md) | four small scripts so far |
 | [`ROADMAP.md`](ROADMAP.md) | what's planned, phase by phase |
 

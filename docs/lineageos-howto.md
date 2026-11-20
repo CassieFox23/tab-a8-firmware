@@ -10,6 +10,12 @@ how a [LineageOS](https://lineageos.org) GSI went onto two Galaxy Tab A8s from a
 - the full way back to stock was **not** tested. only a smaller piece of it was - see [going back to stock](#going-back-to-stock).
 - the tablet side was my hands. the PC side was run by [Claude Code](https://github.com/anthropics/claude-code).
 
+the whole thing in one picture - teal is by hand, green is a PC command, red wipes the tablet:
+
+![the flash as one flow in three lanes: by hand on the tablet (OEM unlocking, Download Mode, long-press Volume Up which wipes it, boot into TWRP, Format Data, LineageOS 22.2 boots), on the PC (get stock firmware, write test of the stock recovery while still locked, flash.locked reads 0, flash TWRP with -p 38 --no-reboot, fastboot flash system, fastboot flash recovery with the stock one), and the way back to stock (the stock recovery menu shows after the write test; a full stock restore was never run)](../figures/flash-flow.png)
+
+the same diagram as a page you can click around is in [`.archify/`](../.archify/workflow-tab-a8-flash-20261120-144800/tab-a8-flash.html).
+
 the order of the flash itself (TWRP, format data, fastbootd, system, then stock recovery back) comes from [yashjawale's notes](https://github.com/yashjawale/wiki/blob/main/docs/guides/flash-gsi-a8.md), which use Odin on Windows. this is the same route with Linux tools.
 
 ## what you need
