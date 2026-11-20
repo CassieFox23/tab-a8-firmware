@@ -4,7 +4,7 @@ most of this teardown is files unpacked and read with ordinary tools - `debugfs`
 
 the bootloader (`lk`) and the secure world (`trustos`) are different. they're raw ARM64 code with no headers and no symbol names - just megabytes of instructions. to read those, the teardown uses [REA](https://github.com/morluto/rea), which drives a [Ghidra](https://github.com/NationalSecurityAgency/ghidra) analysis engine: you open the raw image, tell it the CPU and the address it loads at (worked out first with [`tools/pin_base.py`](../tools/README.md)), then ask about functions by address. only a handful of functions in each image were read - the ones on the paths that answer a question - not the whole binary.
 
-these are the REA tools that did it, grouped by what they're for; how many of each it took is in [the numbers](#the-numbers) at the foot.
+these are the REA tools that did it, grouped by what they're for; how many of each it took is in [what it took](what-it-took.md).
 
 ## getting a file open
 

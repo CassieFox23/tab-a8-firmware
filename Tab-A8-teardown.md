@@ -505,7 +505,7 @@ the fence around it holds, read the same way the A10e's was:
 - the Trustonic hwservice types (`vendor.trustonic.tee`, `.teeregistry`) exist in the policy but no Trustonic binary ships - leftover template, the same thing the A10e showed.
 
 ```
-debugfs -R 'rdump /etc/selinux .' vendor.img          # pull the compiled policy out of vendor.img first
+mkdir -p vendor/etc && debugfs -R 'rdump /etc/selinux vendor/etc' vendor.img   # pull the compiled policy out of vendor.img first (it grumbles about ownership when not root, and still extracts)
 seinfo vendor/etc/selinux/precompiled_sepolicy | grep -E 'Allow|Types|Permissive'
 sesearch -A -t teetz_device -c chr_file vendor/etc/selinux/precompiled_sepolicy
 sesearch -A -s untrusted_app -t teetz_device -c chr_file vendor/etc/selinux/precompiled_sepolicy   # no rules
