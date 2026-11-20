@@ -80,7 +80,7 @@ lpunpack -p vendor -p system super.raw .    # gives the vendor.img and system.im
 
 no addresses, just the story. everything here is backed by a section further down.
 
-- **starting the tablet is a relay.** each piece of startup code checks the next one before handing over. the first small loader carries the fingerprint of the key the next four files must be signed with, and the main bootloader carries the fingerprint of the key for the Android images. what checks the very first piece isn't in these files.
+- **starting the tablet is a relay.** the pieces of startup code that were read each check what they load before handing over. the first small loader carries the fingerprint of the key the next four files must be signed with, and the main bootloader carries the fingerprint of the key for the Android images. what checks the very first piece isn't in these files.
 - **"unlocked" isn't a switch the bootloader just believes.** it's a small record in storage, and the bootloader asks the secure world - a separate little system the normal one can't see into - whether that record is genuine.
 - **the bootloader hands the boot image to the secure world to check**, and the answer becomes a colour: green for Samsung's key, yellow for someone else's key, orange for unlocked, red for a failed check. (the key names are the bootloader's own log lines; the colours are read from the code.)
 - **unlocked, it doesn't even ask.** the check on the boot image is skipped and the colour is orange. the real tablets then booted a system that isn't Samsung's, with the boot image still stock - the code that lets a different system through wasn't read.
@@ -258,7 +258,7 @@ the interactive page is in `.archify/workflow-tab-a8-unlock-20261120-173000/`.
 - one global, at `0x9f4388a8`, holds "unlocked". exactly one function writes it: `0x9f121324`
 - that function reads 512 bytes from the `miscdata` partition at offset `0x2000` and hands the first 64 to `0x9f0108e8`
 - `0x9f0108e8` copies them into a page-aligned buffer and sends **command `0x33`** to the secure world. it counts as unlocked only if the call returns `0` and a byte in the reply is set
-- so `lk` doesn't decide by itself whether the tablet is unlocked. it asks the secure world and keeps the answer in that global. `0x9f121324` isn't run once and remembered for good: three functions call it again when they need the answer (`0x9f03536c`, `0x9f0352cc` and `0x9f124e64`). the verified-boot code in `0x9f120b00` and `0x9f121540` reads the stored flag instead, and what sets it first on that path wasn't read
+- so `lk` doesn't decide by itself whether the tablet is unlocked. it asks the secure world and keeps the answer in that global. `0x9f121324` isn't run once and remembered for good: it's called from 19 places in `lk` (a scan for `bl` to it), among them `0x9f03536c`, `0x9f0352cc` and `0x9f124e64`, which were read, plus the Download Mode code and others that weren't. the verified-boot code in `0x9f120b00` and `0x9f121540` reads the stored flag instead. on the boot path the flag is set just before: `0x9f010c48` calls a small function, `0x9f01082c`, right ahead of `0x9f120b00`, and that function contains one of the 19 calls (at `0x9f010838`). `0x9f01082c` itself wasn't decompiled
 
 the call itself: 27 small wrappers each load a command number (`0x1` to `0x50`) and call a dispatcher at `0x9f14325c`, which calls `0x9f147000`, where the `smc` instruction is (`0x9f147018`). there's a second `smc` in `lk` at `0x9f143d40` (bytes confirmed); what reaches it wasn't read.
 

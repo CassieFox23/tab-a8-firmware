@@ -125,7 +125,7 @@ samloader flash -p 38 ap/recovery.img
 
 it ends with `recovery flash successful` and the tablet reboots. the first time round the tablet was then booted into recovery (`adb reboot recovery`), the stock recovery menu showed, and it booted to Android fine.
 
-`38` is the recovery partition's id in this tablet's partition table - it's in the [partition map](partition-map.md), in the second column next to the name, not the row number in the first. a wrong number writes to a different partition, so check yours before using it (`samloader print-pit -f <your .pit file>` prints the table).
+`38` is the recovery partition's id in this tablet's partition table - it's in the [partition map](partition-map.md), in the second column next to the name, not the row number in the first. a wrong number writes to a different partition, so check yours before using it (`samloader print-pit -f <your .pit file>` prints the table - the `.pit` file is in the CSC bundle).
 
 ## 5. unlock the bootloader
 
@@ -134,7 +134,7 @@ it ends with `recovery flash successful` and the tablet reboots. the first time 
 1. power off.
 2. hold both volume keys and plug in, same as before.
 3. on the warning screen, **long press Volume Up**.
-4. confirm on the next screen. the screen says which key *(done by hand, the key wasn't written down)*.
+4. confirm on the next screen. the screen says which key. it was pressed by hand and the key wasn't written down.
 5. the tablet wipes itself and restarts.
 
 it sits on the Samsung logo long enough to look like a boot loop. it wasn't one, either time. from then on there's a warning at startup about the unlocked bootloader.

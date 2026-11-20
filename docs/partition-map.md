@@ -1,6 +1,6 @@
 # partition map
 
-![all 58 partitions of the SM-X200 in on-disk order on a log scale, coloured by which firmware bundle ships an image: 7 from BL, 10 from AP, 4 from CSC, 36 with no image in this firmware; super is the largest at 6,428 MiB](../figures/partition-map.png)
+![the SM-X200's partitions in on-disk order on a log scale (57 of the 58 are drawn - `userdata` has no size in the PIT), coloured by which firmware bundle ships an image: 7 from BL, 10 from AP, 4 from CSC, 36 with no image in this firmware; super is the largest at 6,428 MiB](../figures/partition-map.png)
 
 from `GTA8WIFI_EUR_OPEN.pit` in the CSC bundle of `X200XXS6DYG6`, printed with `samloader print-pit -f` and tabled by [`tools/pit_table.py`](../tools/pit_table.py). sizes assume 512-byte blocks, which is what makes `recovery` come out at the 64 MiB its image is.
 
