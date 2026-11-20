@@ -1,12 +1,13 @@
 # tools
 
-small python scripts, standard library only, apart from matplotlib for the charts and numpy for `pin_base.py`. most take file paths as arguments, so keep the firmware wherever you like. `pit_table.py` and `partition_chart.py` read `samloader print-pit` output on stdin instead. the three charts with their numbers written in (`memory_map_chart.py`, `treble_fit_chart.py`, `tool_calls_chart.py`) redraw their picture in `figures/` unless you give them another path.
+small python scripts, standard library only, apart from matplotlib for the charts and numpy for `pin_base.py`. most take file paths as arguments, so keep the firmware wherever you like. `pit_table.py` and `partition_chart.py` read `samloader print-pit` output on stdin instead. the four charts with their numbers written in (`memory_map_chart.py`, `treble_fit_chart.py`, `tool_calls_chart.py`, `cost_chart.py`) redraw their picture in `figures/` unless you give them another path.
 
 | script | what it does | needs |
 |---|---|---|
 | `md5_check.py` | checks a `.tar.md5` bundle against the md5 line at its end | python 3 |
 | `pit_table.py` | turns `samloader print-pit -f <file.pit>` output into a markdown table | python 3, [`samloader`](https://github.com/topjohnwu/samloader-rs) for the input |
 | `partition_chart.py` | draws every partition in a PIT as a bar chart, coloured by which bundle ships an image for it | python 3, matplotlib, `samloader` for the input |
+| `cost_chart.py` | draws what the work would cost at API prices per model, and the tokens per session behind it; the counts and prices are written in the script | python 3, matplotlib |
 | `memory_map_chart.py` | draws where the boot stages and buffers sit in memory; the addresses are written in the script | python 3, matplotlib |
 | `tool_calls_chart.py` | draws how many tool calls each session made while the repo was built, split by kind; the counts are written in the script | python 3, matplotlib |
 | `treble_fit_chart.py` | draws each device's vendor Treble level against the levels its GSI ships; the numbers are written in the script | python 3, matplotlib |
