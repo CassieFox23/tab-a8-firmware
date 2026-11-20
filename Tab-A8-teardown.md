@@ -162,9 +162,7 @@ the full key ids are SHA-256 values: key A `29f0d80a5959c8513e45c56596d3ff31d217
 *not read yet:*
 
 - what trusts **key A**. nothing in these files names it, so it's below the SPL - most likely in the chip, but that's a guess until something shows it
-- whether each stage really checks the next one this way at boot. the hashes line up, the code that uses them hasn't been read
-- where the OEM-unlock state is stored and read
-- what `lk` does differently once it's unlocked
+- the hashing and signature routines themselves, in any stage
 
 ### inside lk
 
@@ -176,7 +174,130 @@ the full key ids are SHA-256 values: key A `29f0d80a5959c8513e45c56596d3ff31d217
 
 the strings say everything the A10e read went looking for is in here: `avb` (58 lines), `vbmeta` (70), `unlock` (37), `rpmb` (70), `efuse` (30), `odin` (59), `fastboot` (38), plus `Custom Binary Blocked By OEM Lock` and `[KG] failed to malloc kg state block`. so this bootloader has Knox Guard text in it too - whether a path behind it runs on this tablet is for the read.
 
-its load address isn't in the DHTB header, so that still has to be worked out before any reference can be trusted - the same job that went wrong first time on the A10e.
+its load address isn't in the DHTB header, so that had to be worked out before any reference could be trusted - the same job that went wrong first time on the A10e.
+
+### who checks whom
+
+![the boot chain in three lanes: on the eMMC (the stage files, the unlock record in miscdata at 0x2000, the OEM unlocking byte at the end of persistent, vbmeta and the AVB footers), the bootloader stages (whatever trusts key A, the SPL at 0x5700, lk at 0x9f000000, the unlocked flag, the boot state) and the secure world (command 0x33 judges the unlock record, command 0x20 checks vbmeta)](figures/boot-chain.png)
+
+that's the read below in one picture. green is bootloader code that was read, red is the secure world, which wasn't.
+
+### pinning the load addresses
+
+both files are raw code with no load address in the header, so that came first. `tools/pin_base.py` finds it two ways that don't depend on each other:
+
+| file | absolute pointers that land on a string | ADRP page phase | load address |
+|---|---|---|---|
+| `lk` body | 1856 at `0x9f000000`, runner-up 997 | `0x000` (4812 hits, next best 1719) | **`0x9f000000`** |
+| SPL body | 11 at `0x5700`, runner-up 6 | `0x700` (29 hits, next best 11) | **`0x5700`** |
+
+the SPL's is thin on its own - it only has 83 strings - but the two methods agree, and the SPL's own code settles `lk`'s: it loads the `uboot` partition to `0x9f000000` with the 512-byte header just below at `0x9efffe00`.
+
+the SPL's phase is `0x700`, not `0`. that's the same trap as the A10e, where assuming phase 0 quietly pointed every reference at the wrong string.
+
+```
+python3 tools/pin_base.py lk.body
+python3 tools/pin_base.py spl.body
+python3 tools/a64_refs.py lk.body 0x9f000000 "is_oem_unlock_possible" "flashed due to KG locked."
+```
+
+everything below is Ghidra's decompiler output (through [REA](https://github.com/morluto/rea)) for a handful of functions, named by address. it's a read of the paths that answer the open questions, not of the whole bootloader.
+
+### what the SPL does
+
+one function, at `0xf898`, does the loading:
+
+1. loads `teecfg` to `0x94040000`
+2. reads `tee_sml_addr` and `tee_tos_addr` out of it (the variables start at `0x94000000` and `0x94060000`)
+3. loads `sml`, `trustos` and `uboot` - the last one to `0x9f000000`
+4. checks each with the function at `0x10c24`. if a check fails it loads the `_bak` partition and checks that. if that fails too it sits in an endless loop
+5. jumps to `sml`, handing it the `trustos` and `teecfg` addresses. in one mode it skips the TEE files and jumps straight to `lk` - what picks that mode wasn't read
+
+the check is the chain from the hashes, in code:
+
+- `0x10c24` is called as `(0x5500, header of the next image)`. `0x5500` is the SPL's **own** header, 512 bytes below where it runs. it pulls 32 bytes out of its own image (`0x10bd8`)
+- `0x10b78` then takes the next image's body size from header offset `0x30`, hashes the body (`0x107b4`), and passes the hash, those 32 bytes and the next image's certificate to `0x10940`
+
+so the SPL carries the expected key hash in its own signed image and checks the next stage against it - what the certificates said, now seen in the code that uses them.
+
+*not read:* the insides of `0x10bd8`, `0x107b4` and `0x10940`. the SPL body has no SHA-256 constants in it, so where the hashing actually runs isn't known. and the SPL is the thing being checked at the very start, not the checker, so it doesn't say what trusts key A.
+
+### what lk does about locking
+
+**the unlock state is a record in `miscdata`, and the secure world judges it.**
+
+- one global, at `0x9f4388a8`, holds "unlocked". exactly one function writes it: `0x9f121324`
+- that function reads 512 bytes from the `miscdata` partition at offset `0x2000` and hands the first 64 to `0x9f0108e8`
+- `0x9f0108e8` copies them into a page-aligned buffer and sends **command `0x33`** to the secure world. it counts as unlocked only if the call returns `0` and a byte in the reply is set
+- so `lk` doesn't decide by itself whether the tablet is unlocked. it asks Trusty, every time it needs to know
+
+the call itself: 27 small wrappers each load a command number (`0x1` to `0x50`) and call a dispatcher at `0x9f14325c`, which calls `0x9f147000`, where the `smc` instruction is (`0x9f147018`).
+
+that global then drives the kernel command line: `0x9f007b2c` appends `androidboot.flash.locked=0` when it's `1`, and `=1` otherwise.
+
+**the "OEM unlocking" switch is one byte.** `0x9f0351d0` reads the last 512 bytes of the `persistent` partition and returns whether the very last byte is non-zero. that's the switch in Developer options.
+
+**whether an unlock is allowed** is `0x9f03536c`, and it logs its answer as `is_oem_unlock_possible`:
+
+1. already unlocked - yes
+2. the switch byte is zero - no
+3. otherwise it depends on Knox Guard (`0x9f0352cc`): **no** if the KG state is `PRENORMAL`, `ACTIVE`, `LOCKED` or `ERROR`, or if one more check (`0x9f038880`, not read) returns `0x20`
+
+the KG state names come from a table at `0x9f1c0b10`:
+
+| value | state |
+|---|---|
+| 0 | `PRENORMAL` |
+| 1 | `CHECKING` |
+| 2 | `ACTIVE` |
+| 3 | `LOCKED` |
+| 4 | `COMPLETED` |
+| 5 | `ERROR` |
+| 6 | `BROKEN` |
+| 7 | `ALLZERO` |
+
+this fits what the real tablets did: their Download Mode screen read `KG STATE` completed, and they unlocked.
+
+**Knox Guard also gates flashing.** in the flash handler at `0x9f017010`, the code just before the message `All binaries are not allowed to be flashed due to KG locked.` is: KG state equals `3` (`LOCKED`), and a second function (`0x9f037540`, not read) returns `0`. this one is from decoding the branches, not from the decompiler.
+
+**the Download Mode screen** is printed by `0x9f0364fc`: `ODIN MODE`, `PRODUCT NAME`, `CURRENT BINARY` (Samsung Official or Custom), `FRP LOCK`, `OEM LOCK`, `KG STATUS`, `UNISOC SECURE BOOT`, `WARRANTY VOID`, `RP SWREV`, `SECURE DOWNLOAD` and `GRDM STATUS`. its `OEM LOCK` line comes from the same `miscdata` check and the same switch byte.
+
+### what lk does about verified boot
+
+`0x9f1206d0` takes a partition name and:
+
+1. reads the last 64 bytes of the partition - the AVB footer - and checks it
+2. loads the vbmeta blob the footer points at
+3. sends it to the secure world with **command `0x20`**. so the signature check on vbmeta is done by Trusty, not by `lk`
+4. sets a boot-state global (`0x9f435010`) from the answer:
+   - **if the tablet is unlocked, the state is `2`, whatever the check said**
+   - locked and the check returned `0`: state `0`
+   - locked and anything else: state `3`
+
+that first branch is the code behind what the real tablets showed - a system image that isn't Samsung's boots, and the tablet reports `orange`. state `0` and state `3` are most likely `green` and `red`, since those are the other strings next to `orange`, but the function that turns the number into the string wasn't read.
+
+*not read:*
+
+- what `lk` does next when a **locked** tablet lands in state `3`
+- what Trusty does with commands `0x20` and `0x33` - that's the secure world's side
+- who writes the `miscdata` record when you unlock, and what's in its 64 bytes
+- the two helper checks, `0x9f038880` and `0x9f037540`
+- the warranty bit
+
+### against the A10e's sboot
+
+| | A10e `sboot` | Tab A8 |
+|---|---|---|
+| shape | one 4 MiB image with an encrypted stage at the front | separate files per stage, none of the signed ones encrypted |
+| finding the load address | one address, and the page phase was the trap | two addresses, same trap in the SPL (phase `0x700`) |
+| who checks the vbmeta key | the bootloader itself, calling libavb | the bootloader hands vbmeta to the secure world |
+| who holds the unlock state | read inside the bootloader | a record in `miscdata` that the secure world judges |
+| Knox Guard | gates flashing in Download Mode | gates flashing, and gates unlocking too |
+| can it unlock | no, on that unit | yes |
+
+the A10e column is from its [teardown](https://github.com/CassieFox23/a10e-firmware/blob/master/A10e-teardown.md).
+
+the big difference is where the decisions sit. on the A10e they're in the bootloader you can read. here the bootloader asks Trusty for both of them, so the last word is in `tos-sign.bin` - which is the next thing to read.
 
 one thing the firmware does say: the vendor's `default.prop` has `ro.oem_unlock_supported=1`. the A10e had that same line and still wouldn't unlock, so on its own it settles nothing.
 
@@ -202,10 +323,11 @@ one thing seen on the real tablets, from the flash logs in the [how-to](docs/lin
 
 the hash of this key is carried in the bootloader's own signed certificate - see [the chain, from the hashes](#the-chain-from-the-hashes).
 
+the code behind that is in [what lk does about verified boot](#what-lk-does-about-verified-boot): when the tablet is unlocked, the boot state is set without looking at the check's result.
+
 *not read yet:*
 
-- what the bootloader does with an image signed by another key while **locked**
-- the code path behind the unlocked behaviour above
+- what the bootloader does next with a failed check while **locked**
 
 ## why a GSI fits
 

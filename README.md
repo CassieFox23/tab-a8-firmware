@@ -2,7 +2,7 @@
 
 poking at the stock firmware on a **Samsung Galaxy Tab A8 (SM-X200)** - the tablet that took [LineageOS](https://lineageos.org), next to the phone that wouldn't.
 
-**early days.** the first pass is in - the build, the chip, the partition map, verified boot's metadata and why a GSI fits - and so is the LineageOS how-to. the bootloader files have been sized up and their signing chain worked out from the hashes, but no bootloader code has been read yet, and neither has the secure world. [`ROADMAP.md`](ROADMAP.md) says what's next.
+**early days.** the first pass is in - the build, the chip, the partition map, verified boot's metadata and why a GSI fits - and so is the LineageOS how-to. the bootloader's signing chain is worked out from the hashes, and the first two stages have been read for how they check each other, where the unlock state lives and what Knox Guard gates. the secure world hasn't been read yet. [`ROADMAP.md`](ROADMAP.md) says what's next.
 
 ## what this is for
 
@@ -31,7 +31,8 @@ there's also a [how-to](docs/lineageos-howto.md) for putting LineageOS on the ta
 | `.archify/workflow-tab-a8-flash-20261120-144800/` | the whole flash as one flow diagram - standalone HTML + its source |
 | `.archify/tree-tab-a8-vbmeta-20261120-145200/` | what vbmeta covers, as a tree - standalone HTML + its source |
 | `.archify/tree-tab-a8-signing-chain-20261120-151500/` | who signs what in the bootloader files - standalone HTML + its source |
-| [`tools/`](tools/README.md) | six small scripts so far |
+| `.archify/workflow-tab-a8-boot-chain-20261120-154500/` | the boot chain, who checks whom - standalone HTML + its source |
+| [`tools/`](tools/README.md) | eight small scripts so far |
 | [`ROADMAP.md`](ROADMAP.md) | what's planned, phase by phase |
 
 ## get the files

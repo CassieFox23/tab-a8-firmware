@@ -1,0 +1,75 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "The Tab A8 boot chain: who checks whom (X200XXS6DYG6)",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "output": ".archify/workflow-tab-a8-boot-chain-20261120-154500/tab-a8-boot-chain.html",
+    "legend": {
+      "entries": {
+        "backend": { "label": "bootloader code that was read" },
+        "security": { "label": "secure world, not read yet" },
+        "database": { "label": "data on the eMMC" },
+        "external": { "label": "not in these files" }
+      }
+    }
+  },
+  "lanes": [
+    { "id": "store", "label": "On the eMMC" },
+    { "id": "boot", "label": "Bootloader stages" },
+    { "id": "tee", "label": "Secure world (Trusty)", "variant": "exception" }
+  ],
+  "phases": [
+    { "id": "first", "label": "First stage", "fromCol": 0, "toCol": 1 },
+    { "id": "lock", "label": "Is it unlocked", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "vb", "label": "Verified boot", "fromCol": 4, "toCol": 5, "variant": "security" }
+  ],
+  "mainPath": ["rom", "spl", "lk", "ask33", "flag", "ask20", "state"],
+  "nodes": [
+    { "id": "rom", "lane": "boot", "col": 0, "type": "external", "label": "Whatever trusts key A", "sublabel": "below the SPL" },
+    { "id": "spl", "lane": "boot", "col": 1, "type": "backend", "label": "SPL at 0x5700", "sublabel": "checks next key hash" },
+    { "id": "lk", "lane": "boot", "col": 2, "type": "backend", "label": "lk at 0x9f000000", "sublabel": "reads 64 bytes" },
+    { "id": "flag", "lane": "boot", "col": 3, "type": "backend", "label": "unlocked flag", "sublabel": "flash.locked=0 or 1" },
+    { "id": "state", "lane": "boot", "col": 5, "type": "backend", "label": "boot state", "sublabel": "unlocked: always 2" },
+
+    { "id": "files", "lane": "store", "col": 1, "type": "database", "label": "sml, trustos, teecfg, uboot", "sublabel": "or their _bak copies" },
+    { "id": "misc", "lane": "store", "col": 2, "type": "database", "label": "miscdata + 0x2000", "sublabel": "the unlock record" },
+    { "id": "persist", "lane": "store", "col": 3, "type": "database", "label": "persistent, last byte", "sublabel": "OEM unlocking switch" },
+    { "id": "vbmeta", "lane": "store", "col": 4, "type": "database", "label": "vbmeta + AVB footers", "sublabel": "per partition" },
+
+    { "id": "ask33", "lane": "tee", "col": 2, "type": "security", "label": "command 0x33", "sublabel": "judges the record" },
+    { "id": "ask20", "lane": "tee", "col": 4, "type": "security", "label": "command 0x20", "sublabel": "checks vbmeta" }
+  ],
+  "edges": [
+    { "id": "e-rom-spl", "from": "rom", "to": "spl", "label": "checks", "variant": "dashed" },
+    { "id": "e-files-spl", "from": "files", "to": "spl", "label": "loads", "variant": "default" },
+    { "id": "e-spl-lk", "from": "spl", "to": "lk", "label": "via sml", "variant": "emphasis" },
+    { "id": "e-misc-lk", "from": "misc", "to": "lk", "variant": "default" },
+    { "id": "e-lk-33", "from": "lk", "to": "ask33", "label": "smc", "variant": "security" },
+    { "id": "e-33-flag", "from": "ask33", "to": "flag", "label": "0 = unlocked", "variant": "security" },
+    { "id": "e-persist-flag", "from": "persist", "to": "flag", "label": "may unlock?", "variant": "dashed", "role": "branch" },
+    { "id": "e-flag-20", "from": "flag", "to": "ask20", "variant": "default" },
+    { "id": "e-vbmeta-20", "from": "vbmeta", "to": "ask20", "label": "sent to", "variant": "default" },
+    { "id": "e-20-state", "from": "ask20", "to": "state", "label": "0 = ok", "variant": "security" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Read from the code",
+      "items": [
+        "The SPL takes a key hash from its own image and checks each next image against it",
+        "lk asks the secure world whether the unlock record holds, and to check vbmeta",
+        "Unlocked, the boot state is set to 2 whatever the vbmeta check returned"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Not read",
+      "items": [
+        "What Trusty does with commands 0x20 and 0x33",
+        "What trusts key A, and what a locked tablet does after a failed check"
+      ]
+    }
+  ]
+}

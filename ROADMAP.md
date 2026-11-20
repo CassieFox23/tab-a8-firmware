@@ -50,14 +50,14 @@ finish line: phase 4's scope is written down, or phase 4 is dropped with the rea
 
 scope: `lk-sign.bin` (the main bootloader) and `u-boot-spl-16k-sign.bin` (the first stage).
 
-- [ ] the load address of each, pinned before anything else
-- [ ] what trusts key A, if the SPL shows it
+- [x] the load address of each, pinned before anything else
+- [x] what trusts key A, if the SPL shows it - it doesn't. the SPL is the stage being checked, so the answer is below it
 
-- [ ] where the unlock state lives and who reads it
-- [ ] what the bootloader checks before it boots an image, locked and unlocked
-- [ ] any extra gate on flashing, like the A10e's Knox Guard
-- [ ] how that differs from the A10e's `sboot`
-- [ ] picture: the boot chain, who checks whom
+- [x] where the unlock state lives and who reads it
+- [x] what the bootloader checks before it boots an image, locked and unlocked - except what it does next with a failed check while locked
+- [x] any extra gate on flashing, like the A10e's Knox Guard
+- [x] how that differs from the A10e's `sboot`
+- [x] picture: the boot chain, who checks whom
 
 finish line: the boot chain section of [`Tab-A8-teardown.md`](Tab-A8-teardown.md) is written, with addresses.
 
