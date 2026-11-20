@@ -30,7 +30,7 @@ OUT = "#a6e3a1"; READ = "#89b4fa"; WRITE = "#cba6f7"; NEW = "#f9e2af"
 MODELS = [
     ("Fable 5.2", "the build and the review", 902, 410031, 138119018, 1087840, (8, 40, 0.2, 10), True),
     ("Opus 4.8", "most of the secure world", 400, 321312, 76446581, 476338, (5, 25, 0.5, 6.25), True),
-    ("Sonnet 5.5", "five helper agents", 526, 227991, 34245203, 1099116, (2, 10, 0.1, 2.5), False),
+    ("Sonnet 5.5", "four helper agents", 526, 227991, 34245203, 1099116, (2, 10, 0.1, 2.5), False),
     ("Opus 5.5", "start of the secure world", 74, 24871, 3768173, 144437, (4, 20, 0.2, 5), True),
     ("Haiku 5.5", "one helper agent", 30, 36274, 637626, 81089, (0.1, 0.5, 0.01, 0.125), False),
 ]
