@@ -13,6 +13,7 @@ a phase is done when its finish line is met, not when it feels done.
 the things that can be read straight off the stock firmware without a disassembler.
 
 - [ ] which build is being read, and what's in each bundle
+- [ ] the chip, from the device tree
 - [ ] the partition map, from the PIT
 - [ ] what `vbmeta.img` says - the key, the flags, which partitions it covers
 - [ ] the vendor's Treble level, and why a current GSI fits it
@@ -24,6 +25,7 @@ finish line: those rows of [`A8-vs-A10e.md`](A8-vs-A10e.md) are filled, each wit
 
 - [ ] the steps, written from the commands that were actually run
 - [ ] every step checked a second time before it goes in
+- [ ] what the tablet ends up running
 - [ ] how to go back to stock
 - [ ] what broke along the way
 
@@ -42,6 +44,7 @@ finish line: phase 4's scope is written down, or phase 4 is dropped with the rea
 
 - [ ] where the unlock state lives and who reads it
 - [ ] what the bootloader checks before it boots an image, locked and unlocked
+- [ ] any extra gate on flashing, like the A10e's Knox Guard
 - [ ] how that differs from the A10e's `sboot`
 
 finish line: the boot chain section of [`Tab-A8-teardown.md`](Tab-A8-teardown.md) is written, with addresses.
@@ -51,7 +54,7 @@ finish line: the boot chain section of [`Tab-A8-teardown.md`](Tab-A8-teardown.md
 - [ ] which TEE this chip runs, from the firmware's own files
 - [ ] what the SELinux policy lets a normal app reach
 
-finish line: the secure world rows of the comparison are filled.
+finish line: the secure world row of the comparison is filled.
 
 ## phase 6 - putting the two side by side
 
