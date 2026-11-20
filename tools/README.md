@@ -1,6 +1,6 @@
 # tools
 
-small python scripts, standard library only apart from the two chart ones. each takes file paths as arguments, so keep the firmware wherever you like.
+small python scripts, standard library only, apart from matplotlib for the charts. each takes file paths as arguments, so keep the firmware wherever you like.
 
 | script | what it does | needs |
 |---|---|---|
@@ -8,4 +8,5 @@ small python scripts, standard library only apart from the two chart ones. each 
 | `pit_table.py` | turns `samloader print-pit -f <file.pit>` output into a markdown table | python 3, [`samloader`](https://github.com/topjohnwu/samloader-rs) for the input |
 | `partition_chart.py` | draws every partition in a PIT as a bar chart, coloured by which bundle ships an image for it | python 3, matplotlib, `samloader` for the input |
 | `treble_fit_chart.py` | draws each device's vendor Treble level against the levels its GSI ships; the numbers are written in the script | python 3, matplotlib |
+| `bl_sizing.py` | sizes up the BL bundle's files: container, body hash, certificate, RSA-PSS signature check, which key names which, entropy, strings. `--plot` draws the entropy chart | python 3, matplotlib only for `--plot` |
 | `dt_root.py` | prints the root `model` and `compatible` of each device tree in a `.dtb` or an Android `dt_table` (like `dtbo.img`), with node counts | python 3 |

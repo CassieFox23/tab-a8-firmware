@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "diagram_type": "tree",
+  "meta": {
+    "title": "Who signs what in the Tab A8's bootloader files (X200XXS6DYG6)",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "output": ".archify/tree-tab-a8-signing-chain-20261120-151500/tab-a8-signing-chain.html"
+  },
+  "layout": {
+    "direction": "right"
+  },
+  "nodes": [
+    {
+      "id": "keya",
+      "label": "Key A",
+      "sublabel": "RSA-2048, id 29f0d80a... what trusts it is not in these files"
+    },
+    {
+      "id": "spl",
+      "label": "u-boot-spl-16k-sign.bin",
+      "parent": "keya",
+      "sublabel": "signed by key A, names key B"
+    },
+    {
+      "id": "keyb",
+      "label": "Key B",
+      "parent": "spl",
+      "sublabel": "RSA-2048, id 3ca58836..."
+    },
+    {
+      "id": "sml",
+      "label": "sml-sign.bin",
+      "parent": "keyb",
+      "sublabel": "ARM Trusted Firmware BL31"
+    },
+    {
+      "id": "tos",
+      "label": "tos-sign.bin",
+      "parent": "keyb",
+      "sublabel": "Trusty"
+    },
+    {
+      "id": "teecfg",
+      "label": "teecfg-sign.bin",
+      "parent": "keyb",
+      "sublabel": "TEE config table"
+    },
+    {
+      "id": "lk",
+      "label": "lk-sign.bin",
+      "parent": "keyb",
+      "sublabel": "the bootloader, names the AVB key"
+    },
+    {
+      "id": "avb",
+      "label": "AVB key",
+      "parent": "lk",
+      "sublabel": "RSA-4096, sha256 a406eeb5..."
+    },
+    {
+      "id": "vbmeta",
+      "label": "vbmeta.img",
+      "parent": "avb",
+      "sublabel": "8 chained + 3 hashtree partitions"
+    },
+    {
+      "id": "cm4",
+      "label": "sharkl5pro_cm4.bin",
+      "parent": "avb",
+      "sublabel": "pm_sys, AVB footer"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "How each link was shown",
+      "items": [
+        "Signed by: the RSA-PSS signature verifies against the key in the file's own certificate",
+        "Names: the certificate carries the SHA-256 of the next key, and that hash matches"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Not shown",
+      "items": [
+        "What trusts key A, and whether the code checks each link at boot",
+        "grd_fw.img: no known header, looks random, not in this chain"
+      ]
+    }
+  ]
+}

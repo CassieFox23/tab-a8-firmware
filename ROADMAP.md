@@ -40,9 +40,9 @@ finish line: [`docs/lineageos-howto.md`](docs/lineageos-howto.md) has no step th
 
 the BL bundle has seven files. before reading any of them properly: what format is each one, which are signed, which are encrypted, which are readable at all.
 
-- [ ] a short table of the seven files - size, header, entropy, readable or not
+- [x] a short table of the seven files - size, header, entropy, readable or not
 - [ ] a call on which ones are worth a full read
-- [ ] picture: the seven files by size and entropy
+- [x] picture: the seven files by size and entropy, and the signing chain the hashes gave away
 
 finish line: phase 4's scope is written down, or phase 4 is dropped with the reason.
 

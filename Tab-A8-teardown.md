@@ -76,11 +76,107 @@ lpunpack -p vendor -p system super.raw .    # gives the vendor.img and system.im
 
 ## the boot chain
 
-*not read yet.*
+the BL bundle has seven files. this is a sizing pass over all of them - headers, hashes, signatures, entropy and strings. **nothing was disassembled.** it still settled more than expected, because the files check each other with plain hashes.
 
-- what the bootloader files are on this chip and how they're packed
-- who verifies whom, stage by stage
+![the signing chain: key A signs the SPL, whose certificate names key B; key B signs sml, tos, teecfg and lk; lk's certificate names the AVB key, which signs vbmeta.img](figures/signing-chain.png)
+
+### the seven files
+
+| file | goes to partition | size | container | what it is, by its strings |
+|---|---|---|---|---|
+| `u-boot-spl-16k-sign.bin` | `splloader` | 61 KiB | DHTB, signed | the first stage in the bundle. almost no readable text |
+| `sml-sign.bin` | `sml` | 72 KiB | DHTB, signed | ARM Trusted Firmware's BL31, with hooks for Trusty (`NOTICE:  BL31: %s`, `trusty_fast`) |
+| `tos-sign.bin` | `trustos` | 3,388 KiB | DHTB, signed | a Trusty image (`lk/trusty/...`, `com.android.trusty.keymaster.secure`) |
+| `teecfg-sign.bin` | `teecfg` | 122 KiB | DHTB, signed | a config table, starts `TEE_CONFIG_HEADER`, mostly zeros |
+| `lk-sign.bin` | `uboot` | 4,301 KiB | DHTB, signed | the bootloader proper - little kernel (`welcome to lk`), with `fastboot_handler`, `odin_handler`, the `OEM LOCK` and `KG STATE` screen text and the `androidboot.verifiedbootstate=` strings |
+| `sharkl5pro_cm4.bin` | `pm_sys` | 2,048 KiB (579 KiB used) | AVB footer | firmware for a Cortex-M4 side processor (`SPRD-AP_FIRMWARE`, `SHUB:`) |
+| `grd_fw.img` | `grd_fw` | 221 KiB | its own 256-byte header | two blocks that look random end to end. unknown |
+
+the "what it is" column is names and strings only. a string in a file isn't proof the code behind it runs.
+
+the numbers come from one script:
+
+```
+python3 tools/bl_sizing.py --vbmeta vbmeta.img --plot figures/bootloader-files.png \
+    u-boot-spl-16k-sign.bin sml-sign.bin tos-sign.bin teecfg-sign.bin lk-sign.bin sharkl5pro_cm4.bin grd_fw.img
+```
+
+| file | body bytes | entropy | strings (8+) | AArch64 `ret` | hashes | signature |
+|---|---|---|---|---|---|---|
+| `u-boot-spl-16k-sign.bin` | 60704 | 6.05 | 66 | 202 | ok | ok |
+| `sml-sign.bin` | 71920 | 4.88 | 121 | 339 | ok | ok |
+| `tos-sign.bin` | 3467296 | 6.29 | 14028 | 1934 | ok | ok |
+| `teecfg-sign.bin` | 122880 | 0.72 | 207 | 0 | ok | ok |
+| `lk-sign.bin` | 4402800 | 7.20 | 8203 | 7913 | ok | ok |
+| `sharkl5pro_cm4.bin` | 592784 | 7.19 | 1686 | 0 | - | - |
+| `grd_fw.img` | 226560 | 7.99 | 57 | 0 | - | - |
+
+"AArch64 `ret`" counts the 4-byte `ret` instruction at aligned offsets - a cheap way to tell ARM64 code from everything else.
+
+![entropy along each of the seven files: lk and tos are code then data, the Cortex-M4 image is 579 KiB of code and then padding, grd_fw.img sits at the maximum the whole way, teecfg is almost empty](figures/bootloader-files.png)
+
+### nothing readable is encrypted, except maybe one
+
+the five signed files aren't encrypted. each body hashes to the SHA-256 stored in its own header, and four of the five are full of ARM64 code and plain strings. so the A10e's problem - an encrypted stage at the front of `sboot` - doesn't show up in these.
+
+`grd_fw.img` is the odd one. it reads 7.99 bits per byte the whole way through, which is what compressed or encrypted data looks like, and it has no strings. what it's for isn't known.
+
+### the DHTB container
+
+the five `-sign.bin` files share a layout:
+
+| offset | what |
+|---|---|
+| `0x000` | `DHTB`, then a version word (`1`) |
+| `0x008` | SHA-256 of the body |
+| `0x030` | body size |
+| `0x200` | the body |
+| after the body | a `SIMGHDR` block that gives the certificate's offset and size |
+| after that | the certificate, 564 or 596 bytes |
+| last 512 bytes | a `SignerVer02` block - the build (`X200XXS6DYG6`), a timestamp, the key name `SM-X200_EUR_XX_UKEY0`, and some binary that wasn't parsed |
+
+the certificate:
+
+| bytes | what |
+|---|---|
+| 4 | type, `0` or `1` |
+| 4 + 4 + 256 | an RSA-2048 public key: bit count, exponent `65537`, modulus |
+| 32 | SHA-256 of the body, again |
+| 32, type `1` only | SHA-256 of the **next stage's key** |
+| 8 | two words, `1` and `0x3f` in all five |
+| 256 | the signature |
+
+the signature is RSASSA-PSS (SHA-256, 32-byte salt) over the bytes from the body hash up to the signature, and all five verify against the key sitting in the same certificate. a certificate that checks out under its own key only shows the file is consistent - the trust has to come from the stage before it. that's what the type `1` field is for.
+
+### the chain, from the hashes
+
+- the SPL is signed with **key A** (`29f0d80a5959...`). its certificate is type `1` and carries `3ca58836d04d...`.
+- `sml`, `tos`, `teecfg` and `lk` are all signed with **key B**, and SHA-256 over key B (bit count + exponent + modulus) is exactly `3ca58836d04d...`. so the SPL's certificate names the key the next four files must be signed with.
+- `lk`'s certificate is also type `1`, and the hash it carries is `a406eeb5ebc0...` - the SHA-256 of the AVB public key in `vbmeta.img`. so the **signed bootloader names the one vbmeta key it goes with**.
+- that AVB key then signs `vbmeta.img` and the chained partitions, as in the next section. the Cortex-M4 image is one of them: it has no DHTB wrapper, just an AVB footer for `pm_sys` signed by the same key.
+
+so the question from the first pass - where does the bootloader keep the key it trusts - has a first answer without reading any code: the vbmeta key's hash rides in `lk`'s own signed certificate.
+
+the full key ids are SHA-256 values: key A `29f0d80a5959c8513e45c56596d3ff31d21713352706e0e1844fc8d2a17dfc29`, key B `3ca58836d04d90a9acff83ae763a085ca6c50d2444784042aa731e7b0eeaeffd`, AVB key blob `a406eeb5ebc07a5cafabdb1bf2f4ad74275a533f67cc68e680345d22ddc66cef`.
+
+*not read yet:*
+
+- what trusts **key A**. nothing in these files names it, so it's below the SPL - most likely in the chip, but that's a guess until something shows it
+- whether each stage really checks the next one this way at boot. the hashes line up, the code that uses them hasn't been read
 - where the OEM-unlock state is stored and read
+- what `lk` does differently once it's unlocked
+
+### inside lk
+
+`lk-sign.bin` is where the next read goes. its 4.2 MiB body splits three ways:
+
+- ARM64 code up to about 1,314 KiB (the last `ret` is at body offset `0x148954`)
+- tables and strings after that - binwalk finds CRC32 tables, an AES S-box and SHA-256 constants around 1.4 to 1.7 MiB
+- JPEG pictures from 1,828 KiB on (74 JPEG start markers), which is why the file's entropy reads so high. what they show wasn't looked at
+
+the strings say everything the A10e read went looking for is in here: `avb` (58 lines), `vbmeta` (70), `unlock` (37), `rpmb` (70), `efuse` (30), `odin` (59), `fastboot` (38), plus `Custom Binary Blocked By OEM Lock` and `[KG] failed to malloc kg state block`. so this bootloader has Knox Guard text in it too - whether a path behind it runs on this tablet is for the read.
+
+its load address isn't in the DHTB header, so that still has to be worked out before any reference can be trusted - the same job that went wrong first time on the A10e.
 
 one thing the firmware does say: the vendor's `default.prop` has `ro.oem_unlock_supported=1`. the A10e had that same line and still wouldn't unlock, so on its own it settles nothing.
 
@@ -104,9 +200,10 @@ that key isn't the A10e's (`e553992a79ab561a4805371cce123d1ee73db21b`).
 
 one thing seen on the real tablets, from the flash logs in the [how-to](docs/lineageos-howto.md): with the bootloader unlocked, a `system` image that isn't Samsung's booted, and no command in the logs ever wrote to `vbmeta` or turned verification off. after the unlock the tablet reported `ro.boot.verifiedbootstate` as `orange`. so once it's unlocked, the hashtree for `system` in vbmeta didn't stop a different system from starting. that's what happened, not a read of the code that decides it - and the `vbmeta` partition wasn't read back off the tablet to prove it's still the stock one.
 
+the hash of this key is carried in the bootloader's own signed certificate - see [the chain, from the hashes](#the-chain-from-the-hashes).
+
 *not read yet:*
 
-- where the bootloader keeps the key it trusts
 - what the bootloader does with an image signed by another key while **locked**
 - the code path behind the unlocked behaviour above
 
@@ -150,7 +247,7 @@ Samsung's own stock system (Android 14) ships matrices for levels 4 to 8, so it 
 
 ## the secure world
 
-*not read yet.*
+*not read yet.* one early pointer from the bootloader files: `tos-sign.bin` is a Trusty image by its strings, and `sml-sign.bin` is ARM Trusted Firmware with Trusty hooks. the A10e ran Samsung's TEEGRIS. `lk` has no `teegris` string at all and 49 lines with `trusty`.
 
 - which TEE this chip runs and what talks to it
 - what the SELinux policy lets a normal app reach
