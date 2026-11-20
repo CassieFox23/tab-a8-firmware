@@ -45,16 +45,33 @@ both load addresses come from `tools/pin_base.py`. open either image at its addr
 
 ## the numbers
 
-this was read across two Claude Code sessions - the commit authors show which did what. between them, the REA calls that did the decompiling:
+the repo was read across three Claude Code sessions, with a couple of helper agents along the way: **the build** (phases 0 to 4 - the bundles, the images, the signing chain, the first bootloader read), **the secure world** (phases 5 and 6 - the Trusty TEE, the comparison, the diagrams) and **the review** (the deep `lk` boot-path read). the commit authors show which did what.
 
-| the read | REA calls | what it covered |
-|---|---|---|
-| the secure world, then part of the bootloader | 15 | the Trusty TEE (`tos-kernel.body`), then a few `lk` functions |
-| the bootloader's boot path, the deep `lk` read | 42 | 18 functions in `lk.body` |
+![tool calls per session, split into shell commands, REA, file tools and everything else: the build 269, the secure world 194, the review 190](../figures/tool-calls.png)
 
-so about **57 REA calls** read the bootloader and the secure world end to end, decompiling on the order of two dozen distinct functions. (the second figure was a snapshot of a session still going, so the real total is a touch higher.)
+**tool calls, per session** (helper agents included):
 
-that 42 breaks down as: `procedure_pseudo_code` 11, `open_binary` 8, `close_binary` 8, `batch_decompile` 5, `resolve_containing_procedure` 4, `procedure_callers` 4, `binary_session` 1, `procedure_callees` 1. the 16 opens-and-closes are the shared-engine tax: REA runs one Ghidra at a time, so each read opened the image and closed it after.
+| session | shell | REA | file tools | everything else | total |
+|---|---|---|---|---|---|
+| the build | 224 | 21 | 14 | 10 | 269 |
+| the secure world | 120 | 15 | 49 | 10 | 194 |
+| the review | 117 | 42 | 9 | 22 | 190 |
+| **all three** | **461** | **78** | **72** | **42** | **653** |
 
-and REA wasn't the whole job. one session also ran around **86 small shell scripts** - scans of the whole file for "who jumps here" and "who reads this value" - to find which functions were worth decompiling, on top of the edits and commits. the decompiler reads a function; the scripts pick which function.
+so **78 REA calls** read the bootloader and the secure world. REA is the small slice that does the actual decompiling; shell is the bulk, and most of that is little scripts that scan the whole image for "who jumps here" and "who reads this value" to find which functions are worth decompiling - the decompiler reads a function, the scripts pick which one. "file tools" is Read, Edit, Write, Grep and Glob; "everything else" is the diagram builds, coordination between the sessions, and the like.
+
+the review session's 42 REA calls, as the shape of a decompile run: `procedure_pseudo_code` 11, `open_binary` 8, `close_binary` 8, `batch_decompile` 5, `resolve_containing_procedure` 4, `procedure_callers` 4, `binary_session` and `procedure_callees` 1 each (it decompiled 18 distinct `lk` functions). the 16 opens-and-closes are the shared-engine tax: REA runs one Ghidra at a time, so each read opens the image and closes it after.
+
+**tokens, per session** (helper agents included):
+
+| session | written | new input | re-read from cache |
+|---|---|---|---|
+| the build | 240k | 775k | 71.4M |
+| the secure world | 267k | 561k | 48.9M |
+| the review | 139k | 481k | 33.7M |
+| **all three** | **646k** | **1.82M** | **154M** |
+
+"written" is model output; "new input" is input plus cache-creation tokens; "re-read" is cache reads - the whole conversation read again every turn, which is why it dwarfs the rest.
+
+*source and limits:* counted by a script (`tools/tool_calls_chart.py` draws the chart) from the three sessions' transcripts and their helper agents' - API-reported usage per message, de-duplicated by message id; tool-use blocks de-duplicated by id - at about 5:19 PM on 20 Nov 2026. all three sessions were still running then, so these are a snapshot and the real totals are a little higher. two short pre-fork stubs were left out so nothing is double-counted.
 
