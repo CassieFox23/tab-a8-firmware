@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Check a Samsung .tar.md5 bundle against the md5 line at its end.
 
-The file is a tar with one text line appended: "<md5>  <name>". The tar's own
-zero padding runs right up to that line, so the cut has to be made at the
-hash itself and not at the last newline before it.
+The file ends with one text line: "<md5>  <name>". In some bundles zero bytes
+run right up to that line with no newline before it, so the cut is made at
+the hash itself and not at the last newline before it.
 
 usage: python3 tools/md5_check.py <bundle.tar.md5> [...]
 """

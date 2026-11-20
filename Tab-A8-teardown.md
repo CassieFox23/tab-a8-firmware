@@ -39,6 +39,11 @@ the firmware comes as four `.tar.md5` bundles. each one's md5 line matches its c
 | CSC | `GTA8WIFI_EUR_OPEN.pit`, `cache.img`, `omr.img`, `optics.img`, `prism.img`, `meta-data/fota.zip` |
 | HOME_CSC | `cache.img`, `prism.img`, `optics.img`, `meta-data/download-list.txt` |
 
+```
+python3 tools/md5_check.py *.tar.md5
+tar -tvf BL_*.tar.md5        # same for AP, CSC, HOME_CSC
+```
+
 ### the partition layout
 
 the PIT has 58 entries, all on the eMMC, project name `COM_TAR2`, CPU/bootloader tag `SPRD8735`. the full table is in [`docs/partition-map.md`](docs/partition-map.md).
@@ -64,6 +69,7 @@ the PIT also has `steady`, `persistent`, `param`, `vendor_efs` and `sec_efs` par
 ```
 simg2img super.img super.raw
 lpdump super.raw
+lpunpack -p vendor -p system super.raw .    # gives the vendor.img and system.img read below
 ```
 
 ## the boot chain
@@ -82,11 +88,11 @@ what `vbmeta.img` says, read with `avbtool info_image --image vbmeta.img`:
 
 - signed `SHA256_RSA4096`, public key sha1 `3ddc850a07d1098ad2613023f0c226488c357af9`
 - flags `0`, rollback index `0`
-- eight **chained** partitions, each with its own vbmeta footer, all naming that same key: `dtbo`, `boot`, `recovery`, `pm_sys`, `l_agdsp`, `prism`, `optics`, `socko`
+- eight **chained** partitions, all naming that same key: `dtbo`, `boot`, `recovery`, `pm_sys`, `l_agdsp`, `prism`, `optics`, `socko`. a chained partition carries its own vbmeta footer - `boot.img` was the one checked, and `avbtool info_image --image boot.img` shows a footer with a sha256 hash descriptor for `boot`, signed by that key
 - three **hashtree** partitions, checked block by block with dm-verity (sha256): `system`, `vendor`, `product`
 - version props: boot and vendor `11`, system `14`, all patch `2025-08-01`
 
-`vbmeta_system.img` is signed with the same key and carries hashtrees for `system` and `product` again. the main vbmeta has no chain entry pointing at it.
+`vbmeta_system.img` is signed with the same key and carries the same three hashtrees again (`system`, `vendor`, `product`). the main vbmeta has no chain entry pointing at it.
 
 that key isn't the A10e's (`e553992a79ab561a4805371cce123d1ee73db21b`).
 
@@ -121,6 +127,12 @@ and the GSI was checked the same way - `LineageOS-22.2-20260105-VANILLA-EXT4-GSI
 - that level 5 matrix takes a 4.14 kernel from `4.14.180` up, and the tablet's is `4.14.199`
 - `/system/system_ext/apex/` has `com.android.vndk.v30.apex`, the VNDK the vendor asks for
 
+```
+debugfs -R 'ls -l /system/etc/vintf' GSI.img
+debugfs -R 'cat /system/etc/vintf/compatibility_matrix.5.xml' GSI.img | grep -o '<kernel version="[^"]*" level="5">' | sort | uniq -c
+debugfs -R 'ls -l /system/system_ext/apex' GSI.img
+```
+
 so all three line up. this is a read of the files, not a run of Android's own `checkvintf` tool, and the per-HAL rows inside the matrix weren't compared one by one.
 
 Samsung's own stock system (Android 14) ships matrices for levels 4 to 8, so it leans on the same level 5 match - an Android 11 vendor under a newer system is how this tablet ships.
@@ -145,7 +157,7 @@ unpack_bootimg --boot_img boot.img --out boot/unpacked
 strings -n 8 boot/unpacked/kernel | grep -m1 '^Linux version'
 ```
 
-Samsung's published source for this build is the same `4.14.199` (its `Makefile`: `VERSION = 4`, `PATCHLEVEL = 14`, `SUBLEVEL = 199`) and has a `gta8wifi_eur_open_defconfig`. the `-29056031-abX200XXS6DYG6` part of the version isn't in that defconfig (`CONFIG_LOCALVERSION=""`), so it's set at build time.
+Samsung's published source for this build is the same `4.14.199` (its `Makefile`: `VERSION = 4`, `PATCHLEVEL = 14`, `SUBLEVEL = 199`) and has a `gta8wifi_eur_open_defconfig`. the `-29056031-abX200XXS6DYG6` part of the version isn't in that defconfig (`CONFIG_LOCALVERSION=""`). where it comes from isn't traced.
 
 *not read yet:* whether that source builds into this exact kernel.
 
@@ -153,4 +165,4 @@ Samsung's published source for this build is the same `4.14.199` (its `Makefile`
 
 kept on purpose, same as the A10e one.
 
-- **the md5 check that failed for the wrong reason.** the first try at checking the bundles cut the md5 line off at the last newline before it. that works for the two small bundles, but in the BL and AP ones the tar's zero padding runs right up to the hash with no newline, so the cut landed in the wrong place and both came out as mismatches. cutting at the hash itself fixed it, and all four match. `tools/md5_check.py` does it the right way.
+- **the md5 check that failed for the wrong reason.** the first try at checking the bundles cut the md5 line off at the last newline before it, and the BL and AP bundles came out as mismatches. the last bytes show why (`tail -c 176 <bundle> | xxd`): in the CSC bundle the hash follows a text line ending in a newline (`original_tar_file_size:67543040`), so that cut works. in the BL bundle zero bytes run right up to the hash with no newline, so the cut lands somewhere earlier. cutting at the hash itself fixed it, and all four match. the AP bundle's tail wasn't looked at, it just passes the same fix. `tools/md5_check.py` does it the right way.
