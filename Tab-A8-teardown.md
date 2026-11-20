@@ -212,6 +212,16 @@ python3 tools/pin_base.py spl.body
 python3 tools/a64_refs.py lk.body 0x9f000000 "is_oem_unlock_possible" "flashed due to KG locked."
 ```
 
+### where things sit in memory
+
+![where the boot stages and buffers sit in memory: the download buffer from 0x82000000 for 256 MiB with the l_agdsp image inside its range at 0x89000000, the three secure-world pieces together at 0x94000000 to 0x94060000, a staging buffer at 0x9a000000, lk at 0x9f000000, the boot or recovery image at 0xb0000000 and a vbmeta read buffer at 0xd0000000; the SPL is off the scale at 0x5700](figures/memory-map.png)
+
+every address the read turned up, on one line. a bar is a size that was read, a dot is an address with no size. the SPL isn't on the scale - it runs at `0x5700`, far below the rest. the numbers are written into the script, each from a section on this page:
+
+```
+python3 tools/memory_map_chart.py
+```
+
 everything below is Ghidra's decompiler output (through [REA](https://github.com/morluto/rea)) for a handful of functions, named by address. it's a read of the paths that answer the open questions, not of the whole bootloader.
 
 ### what the SPL does
