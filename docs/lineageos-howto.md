@@ -14,7 +14,7 @@ the whole thing in one picture - teal is by hand, green is a PC command, red wip
 
 ![the flash as one flow in three lanes: by hand on the tablet (OEM unlocking, Download Mode, long-press Volume Up which wipes it, boot into TWRP, Format Data, LineageOS 22.2 boots), on the PC (get stock firmware, write test of the stock recovery while still locked, flash.locked reads 0, flash TWRP with -p 38 --no-reboot, fastboot flash system, fastboot flash recovery with the stock one), and the way back to stock (the stock recovery menu shows after the write test; a full stock restore was never run)](../figures/flash-flow.png)
 
-the same diagram as a page you can click around is in [`.archify/`](../.archify/workflow-tab-a8-flash-20261120-144800/tab-a8-flash.html).
+the same diagram as an interactive page is [`tab-a8-flash.html`](../.archify/workflow-tab-a8-flash-20261120-144800/tab-a8-flash.html) - GitHub shows it as source, so download it and open it in a browser.
 
 the order of the flash itself (TWRP, format data, fastbootd, system, then stock recovery back) comes from [yashjawale's notes](https://github.com/yashjawale/wiki/blob/main/docs/guides/flash-gsi-a8.md), which use Odin on Windows. this is the same route with Linux tools.
 
@@ -26,7 +26,7 @@ the order of the flash itself (TWRP, format data, fastbootd, system, then stock 
 | `adb` and `fastboot` | android-tools 37.0.0 | the distro's package |
 | a Samsung flasher | [samloader-rs](https://github.com/topjohnwu/samloader-rs) 2.2.0 (Apache-2.0) | its [GitHub release](https://github.com/topjohnwu/samloader-rs/releases/tag/2.2.0) |
 | the stock firmware for *your* build | `X200XXS6DYG6`, region XAR | Samsung's servers, through samloader-rs |
-| a TWRP recovery for the SM-X200 | `3.7.1_12-support x200-205 stable A14` (the version string inside the image), as `twrp.tar` | an XDA thread (`xdaforums.com/t/4763633/`) |
+| a TWRP recovery for the SM-X200 | `3.7.1_12-support x200-205 stable A14` (the version string inside the image), as `twrp.tar` | an XDA thread, id 4763633 |
 | the GSI | `LineageOS-22.2-20260105-VANILLA-EXT4-GSI` (Android 15) | MisterZtr's [SourceForge builds](https://sourceforge.net/projects/misterztr-gsi/files/LineageOS/) |
 
 [Heimdall](https://git.sr.ht/~grimler/Heimdall) 2.2.2 was also used once, only to read the partition table. you can skip it.

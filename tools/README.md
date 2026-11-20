@@ -1,6 +1,6 @@
 # tools
 
-small python scripts, standard library only apart from the chart one. each takes file paths as arguments, so keep the firmware wherever you like.
+small python scripts, standard library only apart from the two chart ones. each takes file paths as arguments, so keep the firmware wherever you like.
 
 | script | what it does | needs |
 |---|---|---|

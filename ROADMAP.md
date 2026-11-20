@@ -28,7 +28,7 @@ finish line: those rows of [`A8-vs-A10e.md`](A8-vs-A10e.md) are filled, each wit
 ## phase 2 - the LineageOS how-to
 
 - [x] the steps, written from the commands that were actually run
-- [x] every step checked a second time before it goes in
+- [x] every step checked against the logs before it goes in - not run again
 - [x] what the tablet ends up running
 - [ ] how to go back to stock - only the recovery partition has been written back so far, the full restore is untested
 - [x] what broke along the way
