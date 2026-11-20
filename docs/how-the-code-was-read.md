@@ -4,7 +4,7 @@ most of this teardown is files unpacked and read with ordinary tools - `debugfs`
 
 the bootloader (`lk`) and the secure world (`trustos`) are different. they're raw ARM64 code with no headers and no symbol names - just megabytes of instructions. to read those, the teardown uses [REA](https://github.com/morluto/rea), which drives a [Ghidra](https://github.com/NationalSecurityAgency/ghidra) analysis engine: you open the raw image, tell it the CPU and the address it loads at (worked out first with [`tools/pin_base.py`](../tools/README.md)), then ask about functions by address. only a handful of functions in each image were read - the ones on the paths that answer a question - not the whole binary.
 
-these are the REA tools that did it, grouped by what they're for.
+these are the REA tools that did it, grouped by what they're for; how many of each it took is in [the numbers](#the-numbers) at the foot.
 
 ## getting a file open
 
@@ -42,3 +42,19 @@ the two images are carved from the stock BL bundle:
 - `tos-kernel.body` is the first `0xbc000` bytes of `tos-sign.bin`'s body (the Trusty kernel, before the packed apps), loaded at `0xffffffffe0000000`
 
 both load addresses come from `tools/pin_base.py`. open either image at its address in REA and the function addresses named in the [teardown](../Tab-A8-teardown.md) resolve.
+
+## the numbers
+
+this was read across two Claude Code sessions - the commit authors show which did what. between them, the REA calls that did the decompiling:
+
+| the read | REA calls | what it covered |
+|---|---|---|
+| the secure world, then part of the bootloader | 15 | the Trusty TEE (`tos-kernel.body`), then a few `lk` functions |
+| the bootloader's boot path, the deep `lk` read | 42 | 18 functions in `lk.body` |
+
+so about **57 REA calls** read the bootloader and the secure world end to end, decompiling on the order of two dozen distinct functions. (the second figure was a snapshot of a session still going, so the real total is a touch higher.)
+
+that 42 breaks down as: `procedure_pseudo_code` 11, `open_binary` 8, `close_binary` 8, `batch_decompile` 5, `resolve_containing_procedure` 4, `procedure_callers` 4, `binary_session` 1, `procedure_callees` 1. the 16 opens-and-closes are the shared-engine tax: REA runs one Ghidra at a time, so each read opened the image and closed it after.
+
+and REA wasn't the whole job. one session also ran around **86 small shell scripts** - scans of the whole file for "who jumps here" and "who reads this value" - to find which functions were worth decompiling, on top of the edits and commits. the decompiler reads a function; the scripts pick which function.
+
