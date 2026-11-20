@@ -1,0 +1,259 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Tab A8 secure world and the fence around it",
+    "subtitle": "SM-X200 (Unisoc T618) \u2014 Trusty TEE, static read",
+    "output": ".archify/arch-tab-a8-secure-world-20261120-162600/secure-world.html",
+    "locale": "en",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "lk",
+      "type": "backend",
+      "label": "lk bootloader",
+      "sublabel": "normal world (uboot)",
+      "pos": [
+        40,
+        90
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "bl31",
+      "type": "security",
+      "label": "BL31 monitor",
+      "sublabel": "EL3 \u00b7 sml (ATF)",
+      "pos": [
+        430,
+        90
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "trusty",
+      "type": "security",
+      "label": "Trusty TOS",
+      "sublabel": "secure world \u00b7 tos",
+      "pos": [
+        720,
+        110
+      ],
+      "size": [
+        180,
+        72
+      ],
+      "tag": "sprdsec SIP handler"
+    },
+    {
+      "id": "huk",
+      "type": "database",
+      "label": "Hardware key (HUK)",
+      "sublabel": "never leaves the TEE",
+      "pos": [
+        980,
+        114
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "apps",
+      "type": "external",
+      "label": "Android apps",
+      "sublabel": "untrusted_app",
+      "pos": [
+        40,
+        380
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "keystore",
+      "type": "backend",
+      "label": "keystore",
+      "sublabel": "+ keystore_service",
+      "pos": [
+        360,
+        380
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "keymaster",
+      "type": "backend",
+      "label": "keymaster@4.0 HAL",
+      "sublabel": "1 of 23 system domains",
+      "pos": [
+        660,
+        380
+      ],
+      "size": [
+        180,
+        64
+      ]
+    },
+    {
+      "id": "ipc",
+      "type": "security",
+      "label": "/dev/trusty-ipc-dev0",
+      "sublabel": "teetz_device \u00b7 0660 system",
+      "pos": [
+        960,
+        364
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "tag": "SELinux: apps denied"
+    },
+    {
+      "id": "widevine",
+      "type": "backend",
+      "label": "Widevine DRM HAL",
+      "sublabel": "hal_drm \u2014 a media HAL apps can find",
+      "pos": [
+        360,
+        540
+      ],
+      "size": [
+        220,
+        64
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Secure side \u2014 EL3 monitor + Trusty (sml, tos)",
+      "wraps": [
+        "bl31",
+        "trusty",
+        "huk"
+      ]
+    },
+    {
+      "kind": "security-group",
+      "label": "SELinux: 23 system domains reach Trusty, apps fenced out",
+      "wraps": [
+        "keystore",
+        "keymaster",
+        "ipc"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "lk-smc",
+      "from": "lk",
+      "to": "bl31",
+      "label": "smc #0 \u00b7 id 0xb4000020",
+      "variant": "emphasis"
+    },
+    {
+      "id": "bl31-forward",
+      "from": "bl31",
+      "to": "trusty",
+      "label": "forward SiP call"
+    },
+    {
+      "id": "trusty-huk",
+      "from": "trusty",
+      "to": "huk",
+      "label": "derive key",
+      "variant": "security"
+    },
+    {
+      "id": "app-keystore",
+      "from": "apps",
+      "to": "keystore",
+      "label": "binder call (allowed)"
+    },
+    {
+      "id": "keystore-km",
+      "from": "keystore",
+      "to": "keymaster",
+      "label": "binder call"
+    },
+    {
+      "id": "km-ipc",
+      "from": "keymaster",
+      "to": "ipc",
+      "label": "opens node"
+    },
+    {
+      "id": "ipc-trusty",
+      "from": "ipc",
+      "to": "trusty",
+      "label": "Trusty IPC",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "via": [
+        [
+          1060,
+          300
+        ],
+        [
+          810,
+          300
+        ],
+        [
+          810,
+          182
+        ]
+      ]
+    },
+    {
+      "id": "app-wv",
+      "from": "apps",
+      "to": "widevine",
+      "label": "find (only HAL visible)",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "violet",
+      "title": "Secure world",
+      "items": [
+        "Trusty TOS, built Oct 2023; 9 packed trusted apps (keymaster, gatekeeper, RPMB storage, Widevine)",
+        "sprdsec handles the bootloader's SMC id 0xb4000020"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "The two commands lk sends",
+      "items": [
+        "0x33 \u2014 unlock token: AES-CBC(HUK-derived key, 'VerifiedBoot-UNLOCK'), so it is device-bound and can't be forged in miscdata",
+        "0x20 \u2014 vbmeta: libavb avb_slot_verify runs inside the TEE"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "The fence holds",
+      "items": [
+        "0 permissive domains (v30 MLS, user build)",
+        "no app domain reaches /dev/trusty-ipc-dev0 \u2014 SELinux-denied and mode 0660 system",
+        "apps find only media HALs (Widevine, codec), not the key ones; keys go keystore -> keymaster"
+      ]
+    }
+  ]
+}

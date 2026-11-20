@@ -372,10 +372,63 @@ Samsung's own stock system (Android 14) ships matrices for levels 4 to 8, so it 
 
 ## the secure world
 
-*not read yet.* one early pointer from the bootloader files: `tos-sign.bin` is a Trusty image by its strings, and `sml-sign.bin` is ARM Trusted Firmware with Trusty hooks. the A10e ran Samsung's TEEGRIS. `lk` has no `teegris` string at all and 49 lines with `trusty`.
+![the secure world and the fence around it: lk and the other normal-world callers drop to EL3, the ARM Trusted Firmware monitor from sml forwards the SiP call to the Trusty TOS, whose sprdsec handler judges the unlock record and runs libavb; on the Android side 23 system domains reach the Trusty IPC node while every app domain is fenced out, and keys reach it only through keystore and the keymaster HAL](figures/secure-world.png)
 
-- which TEE this chip runs and what talks to it
-- what the SELinux policy lets a normal app reach
+the A10e ran Samsung's TEEGRIS. this tablet runs **Trusty** - Google's little-kernel TEE, in Unisoc's port. three reads settle it: the firmware's own files, what Trusty does with the two commands `lk` sends it, and what the running OS lets near it.
+
+### which TEE, from the files
+
+- the kernel's `gta8wifi_eur_open_defconfig` has `CONFIG_TRUSTY=y`, `CONFIG_TRUSTY_LOG=y`, `CONFIG_TRUSTY_VIRTIO=y` and `CONFIG_DRM_SPRD_GSP_IPC_TRUSTY=y`, and `# CONFIG_TEE is not set` (so no OP-TEE). there's no `CONFIG_TZDEV`, which is what TEEGRIS needs. `lk` has 33 `trusty` strings and zero `teegris`.
+- `tos-sign.bin`'s body is the Trusty TOS: a little-kernel image (`welcome to lk/MP`, `lk/trusty/lib/trusty/smcall.c`, `Initializing Trusted OS SMC handler`) built `sharkl5pro, Built: 01:24:05 Oct 24 2023`, carrying nine packed ELF trusted apps by their package names - `com.android.trusty.keymaster(.secure)`, `.gatekeeper`, `.storage.*` and `.storage.proxy`, `.rpmb.bl`, `.storage_auth.rpmb`, `.hwkey`, `.hwrng`, `.kernelbootcp`, `.oemcrypto(.secure)` (Widevine).
+- `sml-sign.bin` is ARM Trusted Firmware's BL31 with the Trusty dispatcher (`NOTICE:  BL31: %s`, `trusty_fast`). so the stack is lk (normal world) → BL31 monitor at EL3 (sml) → Trusty TOS (tos), the usual Trusty layout.
+
+```
+grep -E 'TRUSTY|CONFIG_TEE|TZDEV' ~/Projects/tab-a8-kernel/arch/arm64/configs/gta8wifi_eur_open_defconfig
+python3 tools/pin_base.py tos-sign.bin --skip 0x200 --end 0xbc000 --high   # base 0xffffffffe0000000, 101 votes to 38
+strings -n 8 tos.body | grep -E 'com\.android\.trusty\.|welcome to lk|Built:'
+```
+
+the TOS body splits like `lk` did: the Trusty kernel is the first ~752 KiB (AArch64), then nine packed 32-bit ARM ELF trusted apps start at body offset `0xbc000`. only the kernel part was carved out and read (`head -c 0xbc000 tos.body > tos-kernel.body`); it loads at `0xffffffffe0000000`, pinned the same two ways as `lk`.
+
+### what Trusty does with lk's two commands
+
+`lk` reaches the secure world with an `smc #0` whose function id is `0xb4000020` and whose second argument word is the command (phase 4's "command `0x33`/`0x20`"). in the TOS, one handler takes those - `sprdsec`'s `process_sip_call` at `0xffffffffe004256c` - and switches on that command word. it checks the id is `0xb4000020` first, then:
+
+- **command `0x33` - the unlock record (`FUNCTYPE_CHECK_LOCK_STATUS`).** it maps the 64-byte record `lk` read out of `miscdata`, computes its own expected 64 bytes, compares the two, and writes `1` into the buffer at offset `0x40` on a match (`unlock status is matched, return unlock.`) or `0` on a miss. the expected bytes come from `0xffffffffe0041d74`: derive a key from the chip's hardware key with the label `VerifiedBoot-HUK-DERIVE`, then AES-CBC the label `VerifiedBoot-UNLOCK` under it. so the unlock record isn't a flag `lk` trusts - it's a token only the secure world can compute, and only on this one chip, because the hardware key never leaves Trusty. planting bytes in `miscdata` can't forge it, and a token from one tablet won't verify on another.
+- **command `0x20` - vbmeta (`avb_slot_verify`).** the handler at `0xffffffffe0072a5c` runs libavb inside the TEE: its callees are the AVB slot-verify path (`### enter avb_slot_verify. ###`, `avb_slot_verify result is %d`, `external/lk/platform/sprd/secureboot/sprd/avb/tos_avb_api.c`). so the vbmeta check phase 4 saw `lk` hand to the secure world really does run there, as a full `avb_slot_verify`, and the result comes back. this is the secure world's half, not proof `lk` trusts only it: `lk`'s own libavb is still unread (the boot-chain section above - four callers of the `0x20` wrapper, and `avb_vbmeta_image_verify` code), so whether `lk` also checks vbmeta for itself isn't read.
+- the same switch carries the rest of the secure plumbing: `0x30`/`0x31` set binding data and run HUK-keyed crypto, `0x32` checks a password the same keyed way, `0x40` reads the chip uid, and a spread of `0x21`-`0x26` and `0x34`-`0x36` handlers for RPMB and efuse.
+
+```
+python3 tools/a64_refs.py tos-kernel.body 0xffffffffe0000000 \
+    "FUNCTYPE_CHECK_LOCK_STATUS" "VerifiedBoot-UNLOCK" "VerifiedBoot-HUK-DERIVE" "enter avb_slot_verify"
+```
+
+this is the answer to phase 4's open question "what does Trusty do with `0x20` and `0x33`": `0x33` authenticates a device-bound unlock token, `0x20` is libavb. read with Ghidra through REA, named by address, a handful of functions - not the whole TOS.
+
+*not read:* the key-derivation primitive itself (which hardware key, which KDF), the nine trusted apps packed behind the kernel, and what BL31 in `sml` does between the `smc` and the TOS.
+
+### what the running OS lets near it
+
+the secure world's Android side was read from the stock `vendor` and `system` images (`debugfs`, no mount) and the compiled SELinux policy (`seinfo`/`sesearch` on `vendor/etc/selinux/precompiled_sepolicy`, v30 MLS, 2900 types, 52,742 `allow` rules, **0 permissive domains** - a proper `user`-build lockdown).
+
+what talks to Trusty: the IPC node `/dev/trusty-ipc-dev0` and the shared-memory node `/dev/tshm`, both labelled `teetz_device` and both mode `0660 system:system`. the userspace that reaches them, each in its own SELinux domain: `keystore`, the AOSP `keymaster@4.0` HAL (plus a `keymaster@4.1-unisoc` in the file contexts), `gatekeeper@1.0-service.trusty`, Unisoc's `trusty@1.0` client HAL, Widevine DRM, `mediacodec`, `vold`, and Samsung's own `vaultkeeperd`, `sem`, `drk`, `proca`, `fkey`, `kgta`, `hdcp` and `iccc` HALs - 23 domains in all. secure storage rides a second path: `sprdstorageproxyd` and `rpmbserver` run in the `tee` domain and are the only things with `chr_file` to the RPMB node.
+
+the fence around it holds, read the same way the A10e's was:
+
+- **no app domain reaches the TEE at all.** across `untrusted_app` and its variants (`_25`/`_27`/`_29`, `sec_`, `filtered_`, `vzwfiltered_`), `isolated_app`, `ephemeral_app`, `priv_app` and `platform_app`, there is **not one `allow` rule** on `teetz_device`, on the RPMB node, or on the `rpmbserver` socket. and here the Unix modes back SELinux up - the nodes are `0660 system:system`, so an app (not in `system`) is already shut out even before the policy, unlike the A10e where the TrustZone nodes were mode `0666` and SELinux was the only fence.
+- **an app can't discover the key HALs, only the media ones.** `untrusted_app` has no `hwservice_manager find` on keymaster, gatekeeper, the Unisoc trusty client, or any of Samsung's `drk`/`sem`/`wvkprov`/`engmode`/`vaultkeeper` services - all denied. the TEE-touching HALs it *can* find are for protected media: Widevine DRM (`hal_drm`) and the codec HAL (`mediacodec`) both hold `teetz_device` access, and CAS reaches a `tee_device` type that no node here carries. so an app's one path toward the secure world is content protection, never keys or the lock state.
+- **the one sanctioned route to keys** is the normal Android one: an app makes a binder call to `keystore` (allowed) and finds `keystore_service` (allowed); `keystore` calls the `keymaster` HAL (`keystore → hal_keymaster_server:binder`) and also holds its own `teetz_device` access. there's no `keystore2` domain on this build - it's the older `keystore`.
+- the `rpmbserver` socket is mode `0666`, but only `init`/`vendor_init` have `sock_file` rules on it and nothing in `appdomain` can `connectto` the `tee` domain, so the open mode is unreachable in practice.
+- the Trustonic hwservice types (`vendor.trustonic.tee`, `.teeregistry`) exist in the policy but no Trustonic binary ships - leftover template, the same thing the A10e showed.
+
+```
+seinfo vendor/etc/selinux/precompiled_sepolicy | grep -E 'Allow|Types|Permissive'
+sesearch -A -t teetz_device -c chr_file vendor/etc/selinux/precompiled_sepolicy
+sesearch -A -s untrusted_app -t teetz_device -c chr_file vendor/etc/selinux/precompiled_sepolicy   # no rules
+sesearch -A -s untrusted_app -t hal_keymaster_hwservice -c hwservice_manager vendor/etc/selinux/precompiled_sepolicy   # no rules
+```
+
+one caveat on the policy read: `vendor/etc/selinux/precompiled_sepolicy` carries a `plat_sepolicy_and_mapping.sha256` that doesn't match `system`'s, so Android `init` likely recompiles the policy from the CIL sources at boot rather than loading this exact blob. the rules read here are the vendor half plus the shipped plat mapping, which is what the device enforces either way; the runtime-loaded blob itself wasn't pulled off the tablet.
 
 ## the kernel
 

@@ -10,8 +10,11 @@ It then checks the answer a second way: ADRP instructions only work out if
 the low 12 bits of BASE (the page phase) are right, so it counts how many
 ADRP+ADD pairs land on a string for each phase.
 
-usage: python3 tools/pin_base.py IMAGE [--skip N]
+usage: python3 tools/pin_base.py IMAGE [--skip N] [--end N] [--high]
 --skip N drops the first N bytes (0x200 for a DHTB file, to get to the body).
+--end N reads only up to body offset N (to leave out apps packed in behind the code).
+--high looks for pointers at the top of the 64-bit space (0xffff... and up),
+       where a kernel like Trusty's is linked, instead of below 2^48.
 Needs numpy.
 """
 import re
@@ -22,17 +25,22 @@ import numpy as np
 path = sys.argv[1]
 skip = int(sys.argv[sys.argv.index("--skip") + 1], 0) if "--skip" in sys.argv else 0
 data = open(path, "rb").read()[skip:]
+if "--end" in sys.argv:
+    data = data[:int(sys.argv[sys.argv.index("--end") + 1], 0)]
 size = len(data)
 
-strings = np.array([m.start() for m in re.finditer(rb"(?<![ -~])[ -~]{6,}\x00", data)], dtype=np.int64)
+strings = np.array([m.start() for m in re.finditer(rb"(?<![ -~])[ -~]{6,}\x00", data)], dtype=np.uint64)
 words = np.frombuffer(data[:size - size % 8], dtype="<u8")
-cand = np.unique(words[(words > 0x10000) & (words < 0x1_0000_0000_0000)]).astype(np.int64)
+if "--high" in sys.argv:
+    cand = np.unique(words[words >= 0xFFFF_0000_0000_0000])
+else:
+    cand = np.unique(words[(words > 0x10000) & (words < 0x1_0000_0000_0000)])
 print(f"{path}: body {size} bytes, {len(strings)} strings, {len(cand)} distinct pointer-sized values")
 
 votes = {}
 for chunk in np.array_split(strings, max(1, len(strings) // 400)):
     diff = (cand[:, None] - chunk[None, :]).ravel()
-    diff = diff[diff > 0]
+    diff = diff[(diff > 0) & (diff < cand.max())]
     vals, counts = np.unique(diff, return_counts=True)
     keep = counts >= 2
     for v, c in zip(vals[keep], counts[keep]):
