@@ -2,6 +2,8 @@
 
 **the tablet's column is filled** - every cell read from its own files; the how, with addresses, is in the [teardown](Tab-A8-teardown.md). the A10e column points at what's written up in [a10e-firmware](https://github.com/CassieFox23/a10e-firmware). the few things still unread are flagged at the foot of each teardown section.
 
+![the two devices side by side: the A10e's single sboot image with its front stage encrypted loads and checks, its bootloader decides verified boot with libavb, and it boots stock Android 9 with OEM unlock refused; the Tab A8's seven stage files, none of the signed ones encrypted, load and ask Trusty, lk asks the secure world with command 0x20 and then sets the state, and it boots a LineageOS 22.2 GSI, unlocked, with the boot state orange](figures/a8-vs-a10e.png)
+
 | question | A10e (SM-A102U) | Tab A8 (SM-X200) |
 |---|---|---|
 | chip family | Exynos | Unisoc UMS512 (`ro.soc.model=T618`) |

@@ -5319,8 +5319,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <text data-detail="context" x="745" y="167" class="t-muted" font-size="9" text-anchor="middle">none of the signed ones encrypted</text>
         </g>
 
-        <g id="node-a8_vb" data-node-id="a8_vb" data-node-label="verified boot" tabindex="0" role="button" aria-label="Focus verified boot, the secure world decides (Trusty, cmd 0x20), Tab A8 (SM-X200) - Unisoc T618 - runs LineageOS" aria-pressed="false" data-node-kind="security" data-node-sublabel="the secure world decides (Trusty, cmd 0x20)" data-node-context="Tab A8 (SM-X200) - Unisoc T618 - runs LineageOS">
-          <title>verified boot · the secure world decides (Trusty, cmd 0x20) · Tab A8 (SM-X200) - Unisoc T618 - runs LineageOS</title>
+        <g id="node-a8_vb" data-node-id="a8_vb" data-node-label="verified boot" tabindex="0" role="button" aria-label="Focus verified boot, lk asks the secure world (cmd 0x20), then sets the state, Tab A8 (SM-X200) - Unisoc T618 - runs LineageOS" aria-pressed="false" data-node-kind="security" data-node-sublabel="lk asks the secure world (cmd 0x20), then sets the state" data-node-context="Tab A8 (SM-X200) - Unisoc T618 - runs LineageOS">
+          <title>verified boot · lk asks the secure world (cmd 0x20), then sets the state · Tab A8 (SM-X200) - Unisoc T618 - runs LineageOS</title>
           <rect x="620" y="300" width="250" height="66" rx="8" class="c-mask"/>
           <rect x="620" y="300" width="250" height="66" rx="8" class="c-security" data-animate="node" style="--step:3" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(626 306) scale(0.6875)">
@@ -5328,7 +5328,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
             <path d="m5.8 8 1.5 1.5 3-3"/>
           </g>
           <text data-node-label="" data-detail-anchor="" x="745" y="331" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">verified boot</text>
-        <text data-detail="context" x="745" y="347" class="t-muted" font-size="9" text-anchor="middle">the secure world decides (Trusty, cmd 0x20)</text>
+        <text data-detail="context" x="745" y="347" class="t-muted" font-size="7.2" text-anchor="middle">lk asks the secure world (cmd 0x20), then sets the state</text>
         </g>
 
         <g id="node-a8_out" data-node-id="a8_out" data-node-label="LineageOS 22.2 GSI" tabindex="0" role="button" aria-label="Focus LineageOS 22.2 GSI, unlocked; boot state orange, Tab A8 (SM-X200) - Unisoc T618 - runs LineageOS" aria-pressed="false" data-node-kind="external" data-node-sublabel="unlocked; boot state orange" data-node-context="Tab A8 (SM-X200) - Unisoc T618 - runs LineageOS">
@@ -5585,7 +5585,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         </div>
         <ul>
           <li>A10e: in the bootloader you can read</li>
-          <li>Tab A8: pushed into the secure world - Trusty judges the unlock token (cmd 0x33) and the vbmeta check that sets the boot state (cmd 0x20)</li>
+          <li>Tab A8: lk asks the secure world - Trusty judges the unlock token (cmd 0x33) and checks the image (cmd 0x20); lk sets the boot state from the answer, and skips the check when unlocked</li>
           <li>lk runs its own libavb too, but that feeds the kernel cmdline, not the boot-state gate</li>
         </ul>
       </div>
@@ -5608,7 +5608,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         </div>
         <ul>
           <li>A10e: TEEGRIS; TrustZone nodes 0666, SELinux the only fence</li>
-          <li>Tab A8: Trusty; TEE node 0660 plus SELinux; apps reach only the media HALs, never the key ones</li>
+          <li>Tab A8: Trusty; TEE node 0660 plus SELinux; of the HALs that touch the TEE, apps can find only the media ones, never the key ones</li>
         </ul>
       </div>
 

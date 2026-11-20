@@ -54,9 +54,9 @@
     },
     {
       "id": "huk",
-      "type": "database",
+      "type": "external",
       "label": "Hardware key (HUK)",
-      "sublabel": "stays in the TEE, by its label",
+      "sublabel": "named by a key label, not read",
       "pos": [
         980,
         114
@@ -98,7 +98,7 @@
       "id": "keymaster",
       "type": "backend",
       "label": "keymaster@4.0 HAL",
-      "sublabel": "1 of 23 system domains",
+      "sublabel": "1 of the 23 domains",
       "pos": [
         660,
         380
@@ -150,7 +150,7 @@
     },
     {
       "kind": "security-group",
-      "label": "SELinux: 23 system domains reach Trusty, apps fenced out",
+      "label": "SELinux: 23 domains can open the Trusty node, no app domain among them",
       "wraps": [
         "keystore",
         "keymaster",
@@ -170,7 +170,8 @@
       "id": "bl31-forward",
       "from": "bl31",
       "to": "trusty",
-      "label": "forward SiP call"
+      "label": "hop not read",
+      "variant": "dashed"
     },
     {
       "id": "trusty-huk",
@@ -223,7 +224,7 @@
       "id": "app-wv",
       "from": "apps",
       "to": "widevine",
-      "label": "find (media HALs only)",
+      "label": "find: media HALs, of the TEE ones",
       "variant": "dashed",
       "fromSide": "bottom",
       "toSide": "top"
@@ -234,7 +235,7 @@
       "dot": "violet",
       "title": "Secure world",
       "items": [
-        "Trusty TOS, built Oct 2023; 9 packed trusted apps (keymaster, gatekeeper, RPMB storage, Widevine)",
+        "Trusty TOS, built Oct 2023; nine packed ELF blobs; which apps they are was not read",
         "sprdsec handles the bootloader's SMC id 0xb4000020"
       ]
     },
@@ -242,7 +243,7 @@
       "dot": "amber",
       "title": "The two commands lk sends",
       "items": [
-        "0x33 \u2014 unlock token: AES-CBC(HUK-derived key, 'VerifiedBoot-UNLOCK'), tied to the chip if the HUK-DERIVE label holds, and not forgeable in miscdata",
+        "0x33 \u2014 unlock token: AES-CBC(HUK-derived key, 'VerifiedBoot-UNLOCK'), tied to the chip if the HUK-DERIVE label holds; the key derivation was not read",
         "0x20 \u2014 vbmeta: libavb avb_slot_verify runs inside the TEE"
       ]
     },
@@ -252,7 +253,7 @@
       "items": [
         "0 permissive domains (v30 MLS, user build)",
         "no app domain reaches /dev/trusty-ipc-dev0 \u2014 SELinux-denied and mode 0660 system",
-        "apps find only media HALs (Widevine, codec), not the key ones; keys go keystore -> keymaster"
+        "Of the HALs that touch the TEE, apps can find only the media ones (Widevine, codec), never the key ones; keys go keystore -> keymaster"
       ]
     }
   ]
