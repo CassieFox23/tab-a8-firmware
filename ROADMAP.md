@@ -30,11 +30,12 @@ finish line: those rows of [`A8-vs-A10e.md`](A8-vs-A10e.md) are filled, each wit
 - [x] the steps, written from the commands that were actually run
 - [x] every step checked against the logs before it goes in - not run again
 - [x] what the tablet ends up running
-- [ ] how to go back to stock - only the recovery partition has been written back so far, the full restore is untested
 - [x] what broke along the way
 - [x] picture: the whole flash as one flow, with the way back to stock
 
 finish line: [`docs/lineageos-howto.md`](docs/lineageos-howto.md) has no step that wasn't run on a real SM-X200.
+
+not tested: the full way back to stock. only the recovery partition has been written back, and the how-to lists the rest under [not tested](docs/lineageos-howto.md#not-tested).
 
 ## phase 3 - sizing the bootloader
 
