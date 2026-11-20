@@ -20,7 +20,8 @@ the things that can be read straight off the stock firmware without a disassembl
 - [x] what `vbmeta.img` says - the key, the flags, which partitions it covers
 - [x] the vendor's Treble level, and why a current GSI fits it
 - [x] the kernel in `boot.img` against Samsung's published source
-- [ ] pictures: the partition map, what vbmeta covers, and the Treble fit next to the A10e's miss
+- [x] picture: the partition map
+- [ ] pictures: what vbmeta covers, and the Treble fit next to the A10e's miss
 
 finish line: those rows of [`A8-vs-A10e.md`](A8-vs-A10e.md) are filled, each with the command that shows it.
 
@@ -31,7 +32,7 @@ finish line: those rows of [`A8-vs-A10e.md`](A8-vs-A10e.md) are filled, each wit
 - [x] what the tablet ends up running
 - [ ] how to go back to stock - only the recovery partition has been written back so far, the full restore is untested
 - [x] what broke along the way
-- [ ] picture: the whole flash as one flow, with the way back to stock
+- [ ] picture: the whole flash as one flow, with the way back to stock - the diagram is in `.archify/`, a PNG of it isn't made yet
 
 finish line: [`docs/lineageos-howto.md`](docs/lineageos-howto.md) has no step that wasn't run on a real SM-X200.
 
