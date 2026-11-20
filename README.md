@@ -31,6 +31,7 @@ there's also a [how-to](docs/lineageos-howto.md) for putting LineageOS on the ta
 | [`A8-vs-A10e.md`](A8-vs-A10e.md) | the tablet next to the phone - every cell filled, the A10e side links to its teardown |
 | [`docs/partition-map.md`](docs/partition-map.md) | all 58 partitions from the PIT |
 | [`docs/lineageos-howto.md`](docs/lineageos-howto.md) | the LineageOS how-to - what was done on two tablets, and what wasn't tested |
+| [`docs/how-the-code-was-read.md`](docs/how-the-code-was-read.md) | the REA + Ghidra tools that read the bootloader and secure world, and what each is for |
 | `figures/` | pictures - the charts are made by scripts in `tools/`, the diagrams are screenshots of the archify pages |
 | `.archify/workflow-tab-a8-flash-20261120-144800/` | the whole flash as one flow diagram - standalone HTML + its source |
 | `.archify/tree-tab-a8-vbmeta-20261120-145200/` | what vbmeta covers, as a tree - standalone HTML + its source |
