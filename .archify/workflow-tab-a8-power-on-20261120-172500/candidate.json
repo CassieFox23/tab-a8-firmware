@@ -33,6 +33,10 @@
       "label": "First loader (SPL)"
     },
     {
+      "id": "hop",
+      "label": "Between the SPL and lk"
+    },
+    {
       "id": "lk",
       "label": "lk (bootloader)"
     },
@@ -51,9 +55,6 @@
     }
   ],
   "mainPath": [
-    "power",
-    "rom",
-    "spl",
     "lkread",
     "ask33",
     "locked",
@@ -83,8 +84,24 @@
       "lane": "spl",
       "col": 1,
       "type": "backend",
-      "label": "SPL checks sml, trustos, lk",
-      "sublabel": "against a key hash it carries"
+      "label": "SPL loads and checks",
+      "sublabel": "teecfg, sml, trustos, lk"
+    },
+    {
+      "id": "sml",
+      "lane": "hop",
+      "col": 1,
+      "type": "security",
+      "label": "sml starts (BL31), then Trusty",
+      "sublabel": "SPL passes it trustos, teecfg"
+    },
+    {
+      "id": "handoff",
+      "lane": "hop",
+      "col": 2,
+      "type": "external",
+      "label": "Hand-off to lk",
+      "sublabel": "not read"
     },
     {
       "id": "backup",
@@ -195,8 +212,8 @@
       "lane": "out",
       "col": 3,
       "type": "frontend",
-      "label": "Boots with a warning",
-      "sublabel": "orange, after the wait"
+      "label": "Boots (orange)",
+      "sublabel": "after the wait"
     },
     {
       "id": "normal",
@@ -212,7 +229,7 @@
       "col": 4,
       "type": "frontend",
       "label": "Download Mode (Odin)",
-      "sublabel": "stays there, no boot"
+      "sublabel": "stays there, in the code as read"
     }
   ],
   "edges": [
@@ -246,11 +263,23 @@
       "role": "branch"
     },
     {
-      "id": "e-spl-lk",
+      "id": "e-spl-sml",
       "from": "spl",
-      "to": "lkread",
-      "label": "all pass",
+      "to": "sml",
+      "label": "jumps to",
       "variant": "emphasis"
+    },
+    {
+      "id": "e-sml-hop",
+      "from": "sml",
+      "to": "handoff",
+      "variant": "dashed"
+    },
+    {
+      "id": "e-hop-lk",
+      "from": "handoff",
+      "to": "lkread",
+      "variant": "dashed"
     },
     {
       "id": "e-lk-33",
@@ -270,7 +299,7 @@
       "id": "e-locked-orange",
       "from": "locked",
       "to": "orange",
-      "label": "unlocked: skip 0x20"
+      "label": "unlocked, boot or recovery: skip 0x20"
     },
     {
       "id": "e-locked-20",
@@ -347,18 +376,19 @@
       "dot": "cyan",
       "title": "Read from the code",
       "items": [
-        "The SPL checks sml, trustos and lk against a key fingerprint it carries",
+        "The SPL loads and checks teecfg, sml, trustos and lk (uboot) against a key fingerprint it carries, then jumps to sml, passing it the trustos and teecfg addresses",
         "One check fails: it tries the backup copy. That fails too: an endless loop",
-        "lk asks the secure world (command 0x33) if the miscdata unlock record is genuine",
+        "In one mode the SPL skips the TEE files and jumps straight to lk",
+        "Just before the image check, a small function (0x9f01082c) re-reads the unlock record; lk asks the secure world (command 0x33) if it is genuine",
         "That gives locked or unlocked",
         "Unlocked: the secure-world check of boot/recovery is skipped, state 2 (orange)",
-        "Locked: lk sends the image with command 0x20. Result 0 is state 0 (green), 5 is state 1 (yellow), anything else state 3 (red)",
+        "Locked: lk sends the image with command 0x20. Result 0 is state 0 (green), 5 is state 1 (yellow), anything else state 3 (red) (a 0 does not clear a state that is already 3)",
         "Locked and not booting recovery: vbmeta_system is checked the same way",
         "Reply does not match the call's return: lk logs tos return error! and loops forever",
         "lk always runs its own libavb too; its result is logged and feeds the kernel command line, it does not set the state",
         "Green or yellow: lk logs a line and carries on booting",
-        "Orange: a wait of up to 10000 ticks, then it carries on booting",
-        "Red: a message on screen, then Download Mode (Odin), and it stays there",
+        "Orange: a wait of up to 10000 ticks, then the boot path carries on",
+        "Red: a message on screen, then Download Mode (Odin); in the code as read it stays there",
         "Android gets androidboot.verifiedbootstate=green|yellow|orange|red (green for any unknown number)",
         "Beside it: androidboot.flash.locked=0|1"
       ]
@@ -368,7 +398,8 @@
       "title": "Seen on the tablets",
       "items": [
         "After unlocking, on both real tablets: flash.locked 0, verifiedbootstate orange",
-        "LineageOS boots"
+        "LineageOS boots",
+        "A warning about the unlocked bootloader shows at startup"
       ]
     },
     {
@@ -376,7 +407,9 @@
       "title": "Not read",
       "items": [
         "What trusts the first loader (SPL) itself",
-        "What the orange step shows on screen: the unlocked warning is most likely this step, but its three calls were not read",
+        "How control passes from sml and Trusty to lk",
+        "What picks the mode in which the SPL skips the TEE files and jumps straight to lk",
+        "What the orange step shows on screen (the three calls it makes were not read)",
         "What sits behind lk's own key-trust check",
         "Which images besides boot and recovery go through the loader path"
       ]

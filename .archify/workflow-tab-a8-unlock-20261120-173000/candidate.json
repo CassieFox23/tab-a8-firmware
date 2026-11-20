@@ -71,13 +71,8 @@
     "oem",
     "keys",
     "longpress",
-    "possible",
-    "recwriter",
-    "record",
-    "readrec",
-    "trusty",
-    "result",
-    "readback"
+    "runs",
+    "wipe"
   ],
   "nodes": [
     {
@@ -105,9 +100,17 @@
       "sublabel": "short press writes nothing"
     },
     {
-      "id": "wipe",
+      "id": "runs",
       "lane": "hand",
       "col": 3,
+      "type": "external",
+      "label": "What runs the unlock",
+      "sublabel": "long press to wipe, not read"
+    },
+    {
+      "id": "wipe",
+      "lane": "hand",
+      "col": 4,
       "type": "frontend",
       "label": "Tablet wipes itself",
       "sublabel": "the unlock happens"
@@ -229,11 +232,24 @@
       "variant": "emphasis"
     },
     {
-      "id": "e-long-possible",
+      "id": "e-long-runs",
       "from": "longpress",
-      "to": "possible",
-      "label": "asks lk",
-      "variant": "emphasis"
+      "to": "runs",
+      "variant": "dashed"
+    },
+    {
+      "id": "e-runs-wipe",
+      "from": "runs",
+      "to": "wipe",
+      "variant": "dashed"
+    },
+    {
+      "id": "e-possible-runs",
+      "from": "possible",
+      "to": "runs",
+      "label": "consulted somewhere here",
+      "variant": "dashed",
+      "role": "branch"
     },
     {
       "id": "e-switch-possible",
@@ -249,14 +265,6 @@
       "to": "possible",
       "label": "0x20 = no",
       "variant": "dashed",
-      "role": "branch"
-    },
-    {
-      "id": "e-possible-wipe",
-      "from": "possible",
-      "to": "wipe",
-      "label": "yes",
-      "variant": "security",
       "role": "branch"
     },
     {
@@ -313,25 +321,25 @@
       "title": "Read from the code",
       "items": [
         "OEM unlocking is one byte: the last byte of the persistent partition, non-zero = allowed",
-        "Power off, hold both volume keys, plug in the cable: a warning screen",
-        "Long-press Volume Up unlocks, and this wipes the tablet",
-        "Short press is plain Download Mode and writes nothing",
         "lk decides if an unlock is possible and logs it as is_oem_unlock_possible",
         "Already unlocked: yes. Switch byte zero: no. Otherwise it depends on Knox Guard",
         "Knox Guard says no for state PRENORMAL, ACTIVE, LOCKED or ERROR, or if one more check returns 0x20",
         "The unlock record is 64 bytes at offset 0x2000 in the miscdata partition",
         "Every boot after, lk reads the record and sends it with command 0x33",
         "It counts as unlocked only if the call returns 0 and a byte in the reply is set",
-        "Secure-world read (separate): Trusty recomputes the expected 64 bytes from a key derived from the chip's hardware key and compares",
+        "Secure-world read (separate): Trusty recomputes the expected 64 bytes under a key whose label says it is derived from the chip's hardware key, and compares",
         "If that key is tied to the chip, as its label says, the record cannot be forged by writing bytes to miscdata and will not verify on another tablet (the derivation was not read)",
         "Result: lk appends androidboot.flash.locked=0 and the boot state is orange"
       ]
     },
     {
       "dot": "emerald",
-      "title": "Seen on the tablets",
+      "title": "Seen on the tablets, and from the how-to",
       "items": [
-        "KG STATE showed \"completed\" before the unlock",
+        "The Knox Guard state showed completed before the unlock",
+        "Power off, hold both volume keys, plug in the cable: a warning screen",
+        "Long-press Volume Up unlocks, and this wipes the tablet",
+        "Short press is plain Download Mode and writes nothing",
         "After it: flash.locked 0 and boot state orange",
         "ro.boot.flash.locked reads back 0",
         "Done on two SM-X200 units"
@@ -344,7 +352,8 @@
         "What writes the switch byte on the Android side",
         "What writes the unlock record, and what is in its 64 bytes (not read from lk)",
         "The extra Knox Guard check that can return 0x20",
-        "The key derivation itself"
+        "The key derivation itself",
+        "What calls the unlock check on the long-press path"
       ]
     }
   ]

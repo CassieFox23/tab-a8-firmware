@@ -87,7 +87,7 @@ no addresses, just the story. everything here is backed by a section further dow
 - **locked and failed, it goes red**, puts a message on the screen and drops into Download Mode, where it waits to be flashed. it doesn't carry on booting.
 - **the bootloader also runs a check of its own** on the same signatures. in the code that was read, that second answer is logged and feeds the kernel's command line, but it isn't what sets the colour - as far as the decompiler showed that function.
 
-![what happens when you press power: the first loader checks the next stages against a key hash it carries and tries the backup copies before giving up; lk asks the secure world whether the unlock record is genuine; unlocked skips the image check and goes orange, locked sends the boot image to the secure world and gets green, yellow or red; lk's own libavb check always runs but only feeds the command line; green and yellow boot, orange waits and boots, red drops to Download Mode and stays there](figures/power-on.png)
+![what happens when you press power: the first loader loads and checks the next stages against a key hash it carries, tries the backup copies before giving up, and jumps to sml; how control gets from sml and Trusty to lk wasn't read; lk asks the secure world whether the unlock record is genuine; unlocked skips the image check and goes orange, locked sends the boot image to the secure world and gets green, yellow or red; lk's own libavb check always runs but only feeds the command line; green and yellow boot, orange waits and then boots, red drops to Download Mode and, in the code as read, stays there](figures/power-on.png)
 
 the same story as one flow. grey boxes are things that weren't read. the interactive page is in `.archify/workflow-tab-a8-power-on-20261120-172500/`.
 
@@ -249,7 +249,7 @@ so the SPL carries the expected key hash in its own signed image and checks the 
 
 ### what lk does about locking
 
-![the unlock step by step in four lanes: by hand (OEM unlocking on, both volume keys, long-press Volume Up, the tablet wipes itself), the bootloader (is an unlock possible, reading the record on every boot after), the secure world (Trusty recomputes the expected 64 bytes) and storage (the last byte of persistent, the record at miscdata + 0x2000); what writes the switch byte and the record, the extra Knox Guard check and the key derivation are marked not read](figures/unlock-steps.png)
+![the unlock step by step in four lanes: by hand (OEM unlocking on, both volume keys, long-press Volume Up, the tablet wipes itself), the bootloader (is an unlock possible, reading the record on every boot after), the secure world (Trusty recomputes the expected 64 bytes) and storage (the last byte of persistent, the record at miscdata + 0x2000); what runs the unlock between the long press and the wipe, what writes the switch byte and the record, the extra Knox Guard check and the key derivation are marked not read](figures/unlock-steps.png)
 
 the interactive page is in `.archify/workflow-tab-a8-unlock-20261120-173000/`.
 
