@@ -73,5 +73,38 @@ the review session's 42 REA calls, as the shape of a decompile run: `procedure_p
 
 "written" is model output; "new input" is input plus cache-creation tokens; "re-read" is cache reads - the whole conversation read again every turn, which is why it dwarfs the rest.
 
-*source and limits:* counted by a script (`tools/tool_calls_chart.py` draws the chart) from the three sessions' transcripts and their helper agents' - API-reported usage per message, de-duplicated by message id; tool-use blocks de-duplicated by id - at about 5:19 PM on 20 Nov 2026. all three sessions were still running then, so these are a snapshot and the real totals are a little higher. two short pre-fork stubs were left out so nothing is double-counted.
+**what it would cost at API prices.** the work ran on a Claude subscription, so this is an *estimate* - what the same tokens would run billed per-token on the pay-as-you-go API, not a bill:
+
+| model | where it ran | estimated cost |
+|---|---|---|
+| Fable 5.2 | the build and the review sessions | $41.40 - $46.74 |
+| Opus 4.8 | most of the secure-world session | $29.47 - $30.73 |
+| Sonnet 5.5 | two helper agents | $2.77 |
+| Opus 5.5 | the start of the secure-world session | $1.97 - $2.41 |
+| Haiku 5.5 | one helper agent | $0.03 |
+| **all** | | **$75.65 - $82.67** |
+
+so **about $76 to $83** for the whole repo so far. almost all of it is the cache, not the thinking: at the high end, re-reading the conversation every turn is $43.52 and writing it to cache $19.71, against $19.44 of model output and under a cent of fresh input.
+
+the prices, USD per million tokens, from [models.dev](https://models.dev) (`models show`, read 20 Nov 2026):
+
+| model | input | output | cache read | cache write |
+|---|---|---|---|---|
+| Fable 5.2 | 8 | 40 | 0.2 | 10 |
+| Opus 4.8 | 5 | 25 | 0.5 | 6.25 |
+| Opus 5.5 | 4 | 20 | 0.2 | 5 |
+| Sonnet 5.5 | 2 | 10 | 0.1 | 2.5 |
+| Haiku 5.5 | 0.1 | 0.5 | 0.01 | 0.125 |
+
+and the tokens behind it, per model (uncached input / output / cache read / cache write):
+
+| model | uncached in | output | cache read | cache write |
+|---|---|---|---|---|
+| Fable 5.2 | 736 | 329,674 | 96,567,949 | 889,380 |
+| Opus 4.8 | 284 | 205,770 | 44,467,067 | 334,808 |
+| Opus 5.5 | 74 | 24,871 | 3,768,173 | 144,437 |
+| Sonnet 5.5 | 190 | 59,008 | 12,128,201 | 386,143 |
+| Haiku 5.5 | 30 | 36,274 | 637,626 | 81,089 |
+
+*source and limits:* the calls and tokens were counted by a script (`tools/tool_calls_chart.py` draws the chart) from the three sessions' transcripts and their helper agents' - API-reported usage per message, de-duplicated by message id; tool-use blocks de-duplicated by id - at about 5:20 PM on 20 Nov 2026. two sessions and a helper were still running then, so these are a snapshot and the real totals are a little higher. two short pre-fork stubs were left out so nothing is double-counted. the cost is an estimate at list prices, not a bill. its range is the cache-write price: models.dev lists one rate, so the low end prices every cache write at it, and the high end prices the three main sessions' writes at the one-hour-cache rate (twice the input price) - that doubling is Anthropic's rule as best i understand it, but it wasn't verified on the day. all the arithmetic was done by a script, not by hand.
 
