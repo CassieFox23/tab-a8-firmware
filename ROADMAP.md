@@ -41,12 +41,17 @@ finish line: [`docs/lineageos-howto.md`](docs/lineageos-howto.md) has no step th
 the BL bundle has seven files. before reading any of them properly: what format is each one, which are signed, which are encrypted, which are readable at all.
 
 - [x] a short table of the seven files - size, header, entropy, readable or not
-- [ ] a call on which ones are worth a full read
+- [x] a call on which ones are worth a full read: `lk-sign.bin` and the SPL. the other five stay at sizing level
 - [x] picture: the seven files by size and entropy, and the signing chain the hashes gave away
 
 finish line: phase 4's scope is written down, or phase 4 is dropped with the reason.
 
 ## phase 4 - the bootloader read
+
+scope: `lk-sign.bin` (the main bootloader) and `u-boot-spl-16k-sign.bin` (the first stage).
+
+- [ ] the load address of each, pinned before anything else
+- [ ] what trusts key A, if the SPL shows it
 
 - [ ] where the unlock state lives and who reads it
 - [ ] what the bootloader checks before it boots an image, locked and unlocked
