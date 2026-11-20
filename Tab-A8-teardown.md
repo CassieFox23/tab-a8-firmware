@@ -76,6 +76,17 @@ lpunpack -p vendor -p system super.raw .    # gives the vendor.img and system.im
 
 ## the boot chain
 
+### the plain version
+
+no addresses, just the story. everything here is backed by a section further down.
+
+- **starting the tablet is a relay.** each piece of startup code checks the next one before handing over. the first small loader carries the fingerprint of the key the next four files must be signed with, and the main bootloader carries the fingerprint of the key for the Android images. what checks the very first piece isn't in these files.
+- **"unlocked" isn't a switch the bootloader just believes.** it's a small record in storage, and the bootloader asks the secure world - a separate little system the normal one can't see into - whether that record is genuine.
+- **the bootloader hands the boot image to the secure world to check**, and the answer becomes a colour: green for Samsung's key, yellow for someone else's key, orange for unlocked, red for a failed check.
+- **unlocked, it doesn't even ask.** the check on the boot image is skipped and the colour is orange. that's why LineageOS boots here.
+- **locked and failed, it goes red**, puts a message on the screen and drops into Download Mode, where it waits to be flashed. it doesn't carry on booting.
+- **the bootloader also runs a check of its own** on the same signatures. in the code that was read, that second answer is logged and feeds the kernel's command line, but it isn't what sets the colour.
+
 the BL bundle has seven files. first comes a sizing pass over all of them - headers, hashes, signatures, entropy and strings, with nothing disassembled. it settled more than expected, because the files check each other with plain hashes. the read of the code in `lk` and the SPL starts at [pinning the load addresses](#pinning-the-load-addresses).
 
 ![the signing chain: key A signs the SPL, whose certificate names key B; key B signs sml, tos, teecfg and lk; lk's certificate names the AVB key, which signs vbmeta.img](figures/signing-chain.png)
@@ -275,7 +286,18 @@ the boot flow runs through `0x9f010c48` (it logs `SECUREBOOT_ENABLE`): it picks 
 3. otherwise it sends the image to the secure world with **command `0x20`** (wrapper `0x9f142de4`, struct size `0x68`). if the wrapper's return doesn't match the code in the reply, it logs `tos return error!` and **sits in an endless loop**
 4. then it sets the boot-state global `0x9f435010` from the result: unlocked → `2`; result `0` → `0` (unless the state is already `3`); result `5` → `1`; anything else → `3`
 
-so the state the tablet boots with is set by the **secure-world** check, and on an unlocked `boot`/`recovery` that check is skipped and the state is `2`. that's the orange the real tablets showed - a non-Samsung system booted and the state went orange. the four values (`0`, `1`, `2`, `3`) line up with the four strings `green`/`yellow`/`orange`/`red`, but which number is which wasn't read; `tools/a64_refs.py` puts the code using `yellow` and `red` (`0x9f007b00`, `0x9f007b0c`) in a function at `0x9f007a3c`, just ahead of the `flash.locked` code at `0x9f007b2c`.
+so the state the tablet boots with is set by the **secure-world** check, and on an unlocked `boot`/`recovery` that check is skipped and the state is `2`. that's the orange the real tablets showed - a non-Samsung system booted and the state went orange.
+
+the number becomes a colour in `0x9f007a38`, which switches on the state and adds one string to the kernel command line:
+
+| state | string |
+|---|---|
+| `1` | `androidboot.verifiedbootstate=yellow` |
+| `2` | `androidboot.verifiedbootstate=orange` |
+| `3` | `androidboot.verifiedbootstate=red` |
+| `0`, or anything else | `androidboot.verifiedbootstate=green` |
+
+green is the fallback, so a state number the code doesn't know would also report green. (`tools/a64_refs.py` reports this function as starting at `0x9f007a3c`; Ghidra has `0x9f007a38`.)
 
 there's a near-twin, `0x9f1206d0`, with the same shape (footer, load vbmeta, command `0x20`, set `0x9f435010`) but a slightly different mapping (its locked-`5` goes to `3`, not `1`). nothing was found calling it - no `bl`/`b`, no `ADRP`+`ADD`, not stored as data - so it reads like a dead or alternate copy, and the live numbers above are `0x9f120b00`'s.
 
@@ -310,7 +332,7 @@ python3 tools/a64_refs.py lk.body 0x9f000000 "SECUREBOOT_ENABLE" "Device Status 
   | `3` | prints `TO be implement Reason` to the screen, calls `0x9f0121a8` - which goes into **Download Mode** - and only if that comes back logs `WARNNING: Oem Key & User Key Verify Failed!!!`, waits 60 x 100 ticks and returns |
   | other | logs `WARNNING: VERIFY RESULT UNKNOWN!!!` |
 
-  so going by its own log lines the numbers are `0` Samsung's key, `1` a user key, `2` unlocked, `3` failed - which fits green, yellow, orange, red, though the code that picks the colour string still wasn't read.
+  so going by its own log lines the numbers are `0` Samsung's key, `1` a user key, `2` unlocked, `3` failed - which matches the colours in the table above.
 
   **so a locked tablet that fails the check lands in Download Mode.** `0x9f0121a8` logs `enter fastboot_mode`, sets the mode name to `fastboot`, logs `enter odin mode` and jumps to `0x9f018748`. that one logs `start Odin Mode...`, draws the download logo and the Download Mode screen (`0x9f0364fc`, the same one as above), brings USB up and then loops on the Odin handler with no way out of the loop. there's one check before the loop that would let it return - a setup call, `0x9f0164fc` - but that call can't fail: it sets the download buffer to `0x82000000`, 256 MiB long, logs it and returns `0`. so in the code as read, the tablet stays in Download Mode
 - **`0x9f0349a0` is Samsung's own tally** (`check_secure_boot` in its log lines). it goes through `vbmeta` and then `boot`, `l_agdsp`, `uboot`, `trustos` and `super` (or just `recovery`), and marks each `SAMSUNG` or `CUSTOM`. it only looks at the boot state to skip some of the marking when the state is `3`. this is where the official-or-custom binary status comes from, not a gate
@@ -326,7 +348,6 @@ the other two were found by scanning for loads of `0x9f435010` and then decompil
 
 *not read:*
 
-- the code that turns the state number into the colour string
 - what Trusty does with commands `0x20` and `0x33` - that's the secure world's side, [below](#the-secure-world)
 - what sits behind `lk`'s "is this key trusted" slot (`0x9f9ae060` + `0x30`)
 - who writes the `miscdata` record when you unlock, and what's in its 64 bytes

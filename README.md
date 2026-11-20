@@ -6,6 +6,8 @@ a static read of the stock firmware on a **Samsung Galaxy Tab A8 (SM-X200)** - t
 
 the short of it: on this tablet the decisions that matter sit in the **secure world**, not in the bootloader you can read. a little-kernel TEE (Trusty) judges a device-bound unlock token and runs the vbmeta check that sets the boot state, and the bootloader goes by its answers. that's the opposite of the A10e, where those decisions were in `sboot` - and it's why this one unlocks and runs a GSI where the phone couldn't.
 
+new to this? [the plain version](Tab-A8-teardown.md#the-plain-version) is six short points with no addresses.
+
 ## what this is for
 
 this is the sibling to [a10e-firmware](https://github.com/CassieFox23/a10e-firmware). that one is about a Galaxy A10e that's locked down and stays on stock - so it ended up being a read of how a phone decides what it's allowed to boot.
