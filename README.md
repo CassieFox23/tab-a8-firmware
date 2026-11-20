@@ -39,7 +39,7 @@ there's also a [how-to](docs/lineageos-howto.md) for putting LineageOS on the ta
 | `.archify/workflow-tab-a8-boot-chain-20261120-154500/` | the boot chain, who checks whom - standalone HTML + its source |
 | `.archify/arch-tab-a8-secure-world-20261120-162600/` | the secure world and the fence around it - standalone HTML + its source |
 | `.archify/arch-tab-a8-vs-a10e-20261120-163500/` | the two devices side by side - standalone HTML + its source |
-| [`tools/`](tools/README.md) | nine small scripts |
+| [`tools/`](tools/README.md) | ten small scripts |
 | [`ROADMAP.md`](ROADMAP.md) | the phases, and what's still open |
 
 ## get the files

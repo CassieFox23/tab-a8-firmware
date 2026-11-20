@@ -8,6 +8,7 @@ small python scripts, standard library only, apart from matplotlib for the chart
 | `pit_table.py` | turns `samloader print-pit -f <file.pit>` output into a markdown table | python 3, [`samloader`](https://github.com/topjohnwu/samloader-rs) for the input |
 | `partition_chart.py` | draws every partition in a PIT as a bar chart, coloured by which bundle ships an image for it | python 3, matplotlib, `samloader` for the input |
 | `memory_map_chart.py` | draws where the boot stages and buffers sit in memory; the addresses are written in the script | python 3, matplotlib |
+| `tool_calls_chart.py` | draws how many tool calls each session made while the repo was built, split by kind; the counts are written in the script | python 3, matplotlib |
 | `treble_fit_chart.py` | draws each device's vendor Treble level against the levels its GSI ships; the numbers are written in the script | python 3, matplotlib |
 | `bl_sizing.py` | sizes up the BL bundle's files: container, body hash, certificate, RSA-PSS signature check, which key names which, entropy, strings. `--plot` draws the entropy chart | python 3, matplotlib only for `--plot` |
 | `pin_base.py` | finds the load address of a raw ARM64 image: votes on pointer-minus-string offsets, then checks the ADRP page phase. `--high` looks for pointers at the top of the 64-bit space (a kernel like Trusty's), `--end N` stops before data packed in behind the code | python 3, numpy |
