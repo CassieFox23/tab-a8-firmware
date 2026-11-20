@@ -1,6 +1,6 @@
 # Tab A8 teardown
 
-**stub.** nothing below has been read yet - these are the questions, in the order the [A10e teardown](https://github.com/CassieFox23/a10e-firmware/blob/master/A10e-teardown.md) answered them for the phone.
+**stub.** nothing below has been read yet - these are the questions, the same kind the [A10e teardown](https://github.com/CassieFox23/a10e-firmware/blob/master/A10e-teardown.md) answered for the phone.
 
 ## the device
 

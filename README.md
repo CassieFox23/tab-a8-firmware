@@ -30,7 +30,7 @@ there's also going to be a how-to for putting LineageOS on the tablet, since tha
 
 ## get the files
 
-no firmware is in here and none will be - the stock bundles are big and you can pull your own from Samsung with [`samloader`](https://github.com/topjohnwu/samloader-rs). which build and which commands goes here once the read starts.
+no firmware is in here and none will be - the stock bundles are big. which build it is and how to fetch your own goes here once the read starts.
 
 ## samsung
 
