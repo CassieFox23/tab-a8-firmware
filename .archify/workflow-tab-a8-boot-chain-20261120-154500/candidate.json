@@ -238,6 +238,8 @@
         "The SPL takes a key hash from its own image and checks each next image against it",
         "lk asks the secure world whether the unlock record holds (0x33), and to check vbmeta (0x20)",
         "The 0x20 answer sets the boot state; unlocked, boot/recovery skip it and the state is 2",
+        "lk reads the state back: 0 Samsung key, 1 user key, 2 unlocked, 3 failed (green/yellow/orange/red)",
+        "A failed (red) state drops to Download Mode (Odin), not a boot",
         "lk also runs its own libavb - it checks the signature and feeds the kernel cmdline, not the state gate"
       ]
     },
@@ -246,7 +248,7 @@
       "title": "Not read",
       "items": [
         "What trusts key A, below the SPL",
-        "What reads the boot state downstream and halts or warns on red",
+        "The code that turns the state number into the colour string",
         "Which of lk's two vbmeta paths the boot ultimately trusts"
       ]
     }
