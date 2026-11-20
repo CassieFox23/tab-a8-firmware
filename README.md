@@ -27,6 +27,7 @@ there's also going to be a how-to for putting LineageOS on the tablet, since tha
 | [`A8-vs-A10e.md`](A8-vs-A10e.md) | the tablet next to the phone - the A10e side links to its teardown, the tablet side is empty |
 | [`docs/lineageos-howto.md`](docs/lineageos-howto.md) | the LineageOS how-to - not written yet |
 | [`tools/`](tools/README.md) | scripts, once there are any |
+| [`ROADMAP.md`](ROADMAP.md) | what's planned, phase by phase |
 
 ## get the files
 
