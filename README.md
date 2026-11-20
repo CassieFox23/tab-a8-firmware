@@ -2,7 +2,7 @@
 
 poking at the stock firmware on a **Samsung Galaxy Tab A8 (SM-X200)** - the tablet that took [LineageOS](https://lineageos.org), next to the phone that wouldn't.
 
-**just started.** right now this is the outline and nothing else - the pages below are stubs, and nothing in here is a finding yet.
+**early days.** the first pass is in - the build, the chip, the partition map, verified boot's metadata and why a GSI fits. the bootloader and the secure world haven't been read yet, and the how-to isn't written. [`ROADMAP.md`](ROADMAP.md) says what's next.
 
 ## what this is for
 
@@ -23,10 +23,11 @@ there's also going to be a how-to for putting LineageOS on the tablet, since tha
 
 | path | what it is |
 |---|---|
-| [`Tab-A8-teardown.md`](Tab-A8-teardown.md) | the writeup - a stub for now, just the questions |
-| [`A8-vs-A10e.md`](A8-vs-A10e.md) | the tablet next to the phone - the A10e side links to its teardown, the tablet side is empty |
+| [`Tab-A8-teardown.md`](Tab-A8-teardown.md) | the writeup - the first pass is in, the rest is still questions |
+| [`A8-vs-A10e.md`](A8-vs-A10e.md) | the tablet next to the phone - the A10e side links to its teardown, the tablet side fills in as it's read |
+| [`docs/partition-map.md`](docs/partition-map.md) | all 58 partitions from the PIT |
 | [`docs/lineageos-howto.md`](docs/lineageos-howto.md) | the LineageOS how-to - not written yet |
-| [`tools/`](tools/README.md) | scripts, once there are any |
+| [`tools/`](tools/README.md) | three small scripts so far |
 | [`ROADMAP.md`](ROADMAP.md) | what's planned, phase by phase |
 
 ## get the files

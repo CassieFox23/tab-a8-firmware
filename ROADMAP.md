@@ -12,12 +12,12 @@ a phase is done when its finish line is met, not when it feels done.
 
 the things that can be read straight off the stock firmware without a disassembler.
 
-- [ ] which build is being read, and what's in each bundle
-- [ ] the chip, from the device tree
-- [ ] the partition map, from the PIT
-- [ ] what `vbmeta.img` says - the key, the flags, which partitions it covers
-- [ ] the vendor's Treble level, and why a current GSI fits it
-- [ ] the kernel in `boot.img` against Samsung's published source
+- [x] which build is being read, and what's in each bundle
+- [x] the chip, from the device tree
+- [x] the partition map, from the PIT
+- [x] what `vbmeta.img` says - the key, the flags, which partitions it covers
+- [x] the vendor's Treble level, and why a current GSI fits it
+- [x] the kernel in `boot.img` against Samsung's published source
 
 finish line: those rows of [`A8-vs-A10e.md`](A8-vs-A10e.md) are filled, each with the command that shows it.
 
