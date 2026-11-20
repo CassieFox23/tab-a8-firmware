@@ -81,7 +81,7 @@ mkdir ap
 tar -xf AP_X200XXS6DYG6_*.tar.md5 -C ap recovery.img super.img vbmeta.img vbmeta_system.img boot.img
 ```
 
-only `recovery.img` is needed for the flash - the other four were pulled for the teardown, so leave them out if all you want is LineageOS. for this build `recovery.img` is 67108864 bytes:
+only `recovery.img` is needed for the flash; the other four aren't used in any step below. for this build `recovery.img` is 67108864 bytes:
 
 ```
 c8cfcb64a7330ae215a536e3dad9a982030e01e77f55faa4b6facefc97157589  recovery.img
@@ -125,7 +125,7 @@ samloader flash -p 38 ap/recovery.img
 
 it ends with `recovery flash successful` and the tablet reboots. the first time round the tablet was then booted into recovery (`adb reboot recovery`), the stock recovery menu showed, and it booted to Android fine.
 
-`38` is the recovery partition's id in this tablet's partition table - it's in the [partition map](partition-map.md), in the second column next to the name, not the row number in the first. a wrong number writes to a different partition, so check yours with `samloader print-pit` before using it.
+`38` is the recovery partition's id in this tablet's partition table - it's in the [partition map](partition-map.md), in the second column next to the name, not the row number in the first. a wrong number writes to a different partition, so check yours before using it (`samloader print-pit -f <your .pit file>` prints the table).
 
 ## 5. unlock the bootloader
 
@@ -159,7 +159,7 @@ orange
 ## 6. flash TWRP
 
 ```
-mkdir twrp && tar -xf twrp.tar -C twrp      # the shape of it - the exact unpack command wasn't kept in the log
+mkdir twrp && tar -xf twrp.tar -C twrp      # twrp.tar holds one file, recovery.img; this unpack line is written for the guide, not copied from a log
 adb reboot download
 samloader flash --no-reboot -p 38 twrp/recovery.img
 ```
