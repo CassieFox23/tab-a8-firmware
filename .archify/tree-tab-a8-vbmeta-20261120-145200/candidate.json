@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "diagram_type": "tree",
+  "meta": {
+    "title": "What vbmeta.img covers on the Tab A8 (X200XXS6DYG6)",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "output": ".archify/tree-tab-a8-vbmeta-20261120-145200/tab-a8-vbmeta.html"
+  },
+  "layout": {
+    "direction": "right"
+  },
+  "nodes": [
+    {
+      "id": "vbmeta",
+      "label": "vbmeta.img",
+      "sublabel": "SHA256_RSA4096, key sha1 3ddc850a..., flags 0"
+    },
+    {
+      "id": "chained",
+      "label": "Chained partitions",
+      "parent": "vbmeta",
+      "sublabel": "8, each named with the same key"
+    },
+    {
+      "id": "hashtree",
+      "label": "Hashtree partitions",
+      "parent": "vbmeta",
+      "sublabel": "3, dm-verity, sha256"
+    },
+    {
+      "id": "c_dtbo",
+      "label": "dtbo",
+      "parent": "chained"
+    },
+    {
+      "id": "c_boot",
+      "label": "boot",
+      "parent": "chained",
+      "sublabel": "footer read: hash descriptor"
+    },
+    {
+      "id": "c_recovery",
+      "label": "recovery",
+      "parent": "chained"
+    },
+    {
+      "id": "c_pm_sys",
+      "label": "pm_sys",
+      "parent": "chained"
+    },
+    {
+      "id": "c_l_agdsp",
+      "label": "l_agdsp",
+      "parent": "chained"
+    },
+    {
+      "id": "c_prism",
+      "label": "prism",
+      "parent": "chained"
+    },
+    {
+      "id": "c_optics",
+      "label": "optics",
+      "parent": "chained"
+    },
+    {
+      "id": "c_socko",
+      "label": "socko",
+      "parent": "chained"
+    },
+    {
+      "id": "h_system",
+      "label": "system",
+      "parent": "hashtree",
+      "sublabel": "inside super"
+    },
+    {
+      "id": "h_vendor",
+      "label": "vendor",
+      "parent": "hashtree",
+      "sublabel": "inside super"
+    },
+    {
+      "id": "h_product",
+      "label": "product",
+      "parent": "hashtree",
+      "sublabel": "inside super"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Read with avbtool info_image",
+      "items": [
+        "One key signs vbmeta and is named by every chain entry",
+        "vbmeta_system.img repeats the three hashtrees; nothing chains to it"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Not read yet",
+      "items": [
+        "Where the bootloader keeps the key it trusts",
+        "Footers of the chained partitions other than boot"
+      ]
+    }
+  ]
+}

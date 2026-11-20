@@ -21,7 +21,7 @@ the things that can be read straight off the stock firmware without a disassembl
 - [x] the vendor's Treble level, and why a current GSI fits it
 - [x] the kernel in `boot.img` against Samsung's published source
 - [x] picture: the partition map
-- [ ] pictures: what vbmeta covers, and the Treble fit next to the A10e's miss
+- [x] pictures: what vbmeta covers, and the Treble fit next to the A10e's miss
 
 finish line: those rows of [`A8-vs-A10e.md`](A8-vs-A10e.md) are filled, each with the command that shows it.
 

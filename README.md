@@ -27,9 +27,10 @@ there's also a [how-to](docs/lineageos-howto.md) for putting LineageOS on the ta
 | [`A8-vs-A10e.md`](A8-vs-A10e.md) | the tablet next to the phone - the A10e side links to its teardown, the tablet side fills in as it's read |
 | [`docs/partition-map.md`](docs/partition-map.md) | all 58 partitions from the PIT |
 | [`docs/lineageos-howto.md`](docs/lineageos-howto.md) | the LineageOS how-to - what was done on two tablets, and what wasn't tested |
-| `figures/` | pictures - the partition map (made by `tools/partition_chart.py`) and the flash flow (a screenshot of the archify page) |
+| `figures/` | pictures - the partition map and the Treble fit (made by scripts in `tools/`), what vbmeta covers and the flash flow (screenshots of the archify pages) |
 | `.archify/workflow-tab-a8-flash-20261120-144800/` | the whole flash as one flow diagram - standalone HTML + its source |
-| [`tools/`](tools/README.md) | four small scripts so far |
+| `.archify/tree-tab-a8-vbmeta-20261120-145200/` | what vbmeta covers, as a tree - standalone HTML + its source |
+| [`tools/`](tools/README.md) | five small scripts so far |
 | [`ROADMAP.md`](ROADMAP.md) | what's planned, phase by phase |
 
 ## get the files
@@ -54,4 +55,4 @@ this is a personal project. issues are welcome; pull requests aren't expected.
 
 ## license
 
-the scripts and the write-up are [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html) - see [`LICENSE`](LICENSE). holder: Cassie_Fox. the `.archify/` diagram was made with [archify](https://github.com/tt-a1i/archify), and the generated page carries its runtime and the [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) font ([OFL-1.1](https://openfontlicense.org)) under their own licenses.
+the scripts and the write-up are [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html) - see [`LICENSE`](LICENSE). holder: Cassie_Fox. the `.archify/` diagrams were made with [archify](https://github.com/tt-a1i/archify), and the generated pages carry its runtime and the [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) font ([OFL-1.1](https://openfontlicense.org)) under their own licenses.

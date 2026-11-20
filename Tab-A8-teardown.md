@@ -46,6 +46,8 @@ tar -tvf BL_*.tar.md5        # same for AP, CSC, HOME_CSC
 
 ### the partition layout
 
+![all 58 partitions in on-disk order on a log scale, coloured by which firmware bundle ships an image for each](figures/partition-map.png)
+
 the PIT has 58 entries, all on the eMMC, project name `COM_TAR2`, CPU/bootloader tag `SPRD8735`. the full table is in [`docs/partition-map.md`](docs/partition-map.md).
 
 the PIT ties each BL file to a partition, which is the first real hint of what the bootloader pieces are:
@@ -86,6 +88,8 @@ what settles it is the tablet: it does unlock. the OEM unlocking switch is there
 
 ## verified boot
 
+![what vbmeta.img covers: one RSA-4096 key (sha1 3ddc850a...), flags 0, with eight chained partitions each named with the same key (dtbo, boot, recovery, pm_sys, l_agdsp, prism, optics, socko) and three dm-verity hashtree partitions inside super (system, vendor, product)](figures/vbmeta-covers.png)
+
 what `vbmeta.img` says, read with `avbtool info_image --image vbmeta.img`:
 
 - signed `SHA256_RSA4096`, public key sha1 `3ddc850a07d1098ad2613023f0c226488c357af9`
@@ -109,6 +113,8 @@ one thing seen on the real tablets, from the flash logs in the [how-to](docs/lin
 ## why a GSI fits
 
 this is the wall the A10e hit second, and the tablet doesn't have it.
+
+![Treble levels side by side: the A10e's vendor declares level 3 and its LineageOS 21 GSI ships levels 4 to 8, so nothing matches; the Tab A8's vendor declares level 5 and its LineageOS 22.2 GSI ships 5, 6, 7, 8 and 202404, so level 5 matches](figures/treble-fit.png)
 
 the rule, from Android's [VINTF match rules](https://source.android.com/docs/core/architecture/vintf/match-rules): a system image is paired with the vendor code using the framework matrix whose level equals the vendor's `target-level`.
 
