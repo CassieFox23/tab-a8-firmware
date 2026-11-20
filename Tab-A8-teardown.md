@@ -311,7 +311,7 @@ there's a near-twin, `0x9f1206d0`, with the same shape (footer, load vbmeta, com
 
 the libavb names are its own, from each function's log strings. Ghidra starts two of them four bytes earlier than `tools/a64_refs.py` does (`0x9f1281e0`/`0x9f11f9a0` vs `0x9f1281e4`/`0x9f11f9a4`).
 
-**command `0x20` has four callers.** two are on the boot path read here: `0x9f120b00`, and `0x9f1208b0`, which `0x9f010c48` calls on `pm_sys` (the Cortex-M4 image) under a flag - that one wasn't read through. `0x9f120b00` has a third call site besides the two above, at `0x9f00efe4`, not read. the other two callers are `0x9f123d88` (`check vbmeta image.`, by its string only) and the uncalled twin `0x9f1206d0`.
+**command `0x20` has four callers.** two are on the boot path read here: `0x9f120b00`, and `0x9f1208b0`, which `0x9f010c48` calls on `pm_sys` (the Cortex-M4 image) under a flag - that one wasn't read through. `0x9f120b00` has a third call site besides the two above, at `0x9f00efe4`. it's in `0x9f00ef18`, a general image loader (`load %s with backup img %s` is one of its log lines): given a name, a size and a destination, it sends any image that isn't `pm_sys` and has no backup copy through `0x9f120b00`, then copies it from `0x9a000000` to where it belongs. which images come through that loader wasn't read. the other two callers are `0x9f123d88` (`check vbmeta image.`, by its string only) and the uncalled twin `0x9f1206d0`.
 
 `0x9f010c48` itself is reached by 18 plain branches from one stretch of code (`0x9f011eb4` to `0x9f01254c`), which wasn't read.
 
