@@ -4,6 +4,8 @@ where this is going, in the order it'll happen. cheapest reads first, the bootlo
 
 a phase is done when its finish line is met, not when it feels done.
 
+anything that's easier to see than read gets drawn - a diagram or a chart in each phase, not saved up for the end.
+
 ## phase 0 - the outline
 
 - [x] README, licence, stub pages
@@ -18,6 +20,7 @@ the things that can be read straight off the stock firmware without a disassembl
 - [x] what `vbmeta.img` says - the key, the flags, which partitions it covers
 - [x] the vendor's Treble level, and why a current GSI fits it
 - [x] the kernel in `boot.img` against Samsung's published source
+- [ ] pictures: the partition map, what vbmeta covers, and the Treble fit next to the A10e's miss
 
 finish line: those rows of [`A8-vs-A10e.md`](A8-vs-A10e.md) are filled, each with the command that shows it.
 
@@ -28,6 +31,7 @@ finish line: those rows of [`A8-vs-A10e.md`](A8-vs-A10e.md) are filled, each wit
 - [ ] what the tablet ends up running
 - [ ] how to go back to stock
 - [ ] what broke along the way
+- [ ] picture: the whole flash as one flow, with the way back to stock
 
 finish line: [`docs/lineageos-howto.md`](docs/lineageos-howto.md) has no step that wasn't run on a real SM-X200.
 
@@ -37,6 +41,7 @@ the BL bundle has seven files. before reading any of them properly: what format 
 
 - [ ] a short table of the seven files - size, header, entropy, readable or not
 - [ ] a call on which ones are worth a full read
+- [ ] picture: the seven files by size and entropy
 
 finish line: phase 4's scope is written down, or phase 4 is dropped with the reason.
 
@@ -46,6 +51,7 @@ finish line: phase 4's scope is written down, or phase 4 is dropped with the rea
 - [ ] what the bootloader checks before it boots an image, locked and unlocked
 - [ ] any extra gate on flashing, like the A10e's Knox Guard
 - [ ] how that differs from the A10e's `sboot`
+- [ ] picture: the boot chain, who checks whom
 
 finish line: the boot chain section of [`Tab-A8-teardown.md`](Tab-A8-teardown.md) is written, with addresses.
 
@@ -53,6 +59,7 @@ finish line: the boot chain section of [`Tab-A8-teardown.md`](Tab-A8-teardown.md
 
 - [ ] which TEE this chip runs, from the firmware's own files
 - [ ] what the SELinux policy lets a normal app reach
+- [ ] picture: the secure world and the fence around it
 
 finish line: the secure world row of the comparison is filled.
 
