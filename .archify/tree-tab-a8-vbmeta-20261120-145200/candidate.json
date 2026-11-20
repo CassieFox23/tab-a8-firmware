@@ -98,10 +98,16 @@
       ]
     },
     {
+      "dot": "cyan",
+      "title": "Read later",
+      "items": [
+        "The key's SHA-256 is carried in lk's own signed certificate"
+      ]
+    },
+    {
       "dot": "rose",
       "title": "Not read yet",
       "items": [
-        "Where the bootloader keeps the key it trusts",
         "Footers of the chained partitions other than boot"
       ]
     }

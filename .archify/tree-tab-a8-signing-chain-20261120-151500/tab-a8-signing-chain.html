@@ -5623,6 +5623,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <ul>
           <li>Signed by: the RSA-PSS signature verifies against the key in the file&#39;s own certificate</li>
           <li>Names: the certificate carries the SHA-256 of the next key, and that hash matches</li>
+          <li>In code: the SPL checks sml, trustos and lk against the key hash it carries</li>
         </ul>
       </div>
 
@@ -5632,7 +5633,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           <h3>Not shown</h3>
         </div>
         <ul>
-          <li>What trusts key A, and whether the code checks each link at boot</li>
+          <li>What trusts key A</li>
           <li>grd_fw.img: no known header, looks random, not in this chain</li>
         </ul>
       </div>

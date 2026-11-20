@@ -223,7 +223,7 @@
       "id": "app-wv",
       "from": "apps",
       "to": "widevine",
-      "label": "find (only HAL visible)",
+      "label": "find (media HALs only)",
       "variant": "dashed",
       "fromSide": "bottom",
       "toSide": "top"

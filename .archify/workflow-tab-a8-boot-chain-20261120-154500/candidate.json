@@ -240,7 +240,8 @@
         "The 0x20 answer sets the boot state; unlocked, boot/recovery skip it and the state is 2",
         "lk reads the state back: 0 Samsung key, 1 user key, 2 unlocked, 3 failed (green/yellow/orange/red)",
         "A failed (red) state drops to Download Mode (Odin), not a boot",
-        "lk also runs its own libavb - it checks the signature and feeds the kernel cmdline, not the state gate"
+        "lk also runs its own libavb - it checks the signature and feeds the kernel cmdline, not the state gate",
+        "The state becomes androidboot.verifiedbootstate: 1 yellow, 2 orange, 3 red, anything else green"
       ]
     },
     {
@@ -248,8 +249,7 @@
       "title": "Not read",
       "items": [
         "What trusts key A, below the SPL",
-        "The code that turns the state number into the colour string",
-        "Which of lk's two vbmeta paths the boot ultimately trusts"
+        "What sits behind lk's own key-trust check"
       ]
     }
   ]

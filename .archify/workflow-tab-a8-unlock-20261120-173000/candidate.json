@@ -1,0 +1,351 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "The unlock, step by step, on the Tab A8 (X200XXS6DYG6)",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "output": ".archify/workflow-tab-a8-unlock-20261120-173000/tab-a8-unlock.html",
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "by hand on the tablet"
+        },
+        "backend": {
+          "label": "bootloader (lk) code that was read"
+        },
+        "security": {
+          "label": "secure world (Trusty), read"
+        },
+        "database": {
+          "label": "on storage"
+        },
+        "external": {
+          "label": "not read"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "hand",
+      "label": "By hand on the tablet"
+    },
+    {
+      "id": "lk",
+      "label": "The bootloader (lk)"
+    },
+    {
+      "id": "tee",
+      "label": "The secure world",
+      "variant": "exception"
+    },
+    {
+      "id": "store",
+      "label": "On storage"
+    }
+  ],
+  "phases": [
+    {
+      "id": "setup",
+      "label": "Setting up",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "unlock",
+      "label": "The unlock",
+      "fromCol": 2,
+      "toCol": 3,
+      "variant": "security"
+    },
+    {
+      "id": "after",
+      "label": "Every boot after",
+      "fromCol": 4,
+      "toCol": 5,
+      "variant": "emphasis"
+    }
+  ],
+  "mainPath": [
+    "oem",
+    "keys",
+    "longpress",
+    "possible",
+    "recwriter",
+    "record",
+    "readrec",
+    "trusty",
+    "result",
+    "readback"
+  ],
+  "nodes": [
+    {
+      "id": "oem",
+      "lane": "hand",
+      "col": 0,
+      "type": "frontend",
+      "label": "OEM unlocking on",
+      "sublabel": "Settings, Developer options"
+    },
+    {
+      "id": "keys",
+      "lane": "hand",
+      "col": 1,
+      "type": "frontend",
+      "label": "Hold both volume keys",
+      "sublabel": "power off, cable in"
+    },
+    {
+      "id": "longpress",
+      "lane": "hand",
+      "col": 2,
+      "type": "frontend",
+      "label": "Long-press Volume Up",
+      "sublabel": "short press writes nothing"
+    },
+    {
+      "id": "wipe",
+      "lane": "hand",
+      "col": 3,
+      "type": "frontend",
+      "label": "Tablet wipes itself",
+      "sublabel": "the unlock happens"
+    },
+    {
+      "id": "readback",
+      "lane": "hand",
+      "col": 5,
+      "type": "frontend",
+      "label": "ro.boot.flash.locked 0",
+      "sublabel": "seen on two tablets"
+    },
+    {
+      "id": "kg",
+      "lane": "lk",
+      "col": 1,
+      "type": "external",
+      "label": "One more Knox Guard check",
+      "sublabel": "0x20 means no, not read"
+    },
+    {
+      "id": "possible",
+      "lane": "lk",
+      "col": 2,
+      "type": "backend",
+      "label": "Is an unlock possible?",
+      "sublabel": "is_oem_unlock_possible"
+    },
+    {
+      "id": "recwriter",
+      "lane": "lk",
+      "col": 3,
+      "type": "external",
+      "label": "What writes the unlock record",
+      "sublabel": "and its 64 bytes, not read"
+    },
+    {
+      "id": "readrec",
+      "lane": "lk",
+      "col": 4,
+      "type": "backend",
+      "label": "Reads the unlock record",
+      "sublabel": "sends it, command 0x33"
+    },
+    {
+      "id": "result",
+      "lane": "lk",
+      "col": 5,
+      "type": "backend",
+      "label": "flash.locked=0, orange",
+      "sublabel": "returns 0 and a byte is set"
+    },
+    {
+      "id": "trusty",
+      "lane": "tee",
+      "col": 4,
+      "type": "security",
+      "label": "Trusty recomputes it",
+      "sublabel": "the expected 64 bytes"
+    },
+    {
+      "id": "derive",
+      "lane": "tee",
+      "col": 5,
+      "type": "external",
+      "label": "The key derivation",
+      "sublabel": "from the hardware key, not read"
+    },
+    {
+      "id": "swriter",
+      "lane": "store",
+      "col": 0,
+      "type": "external",
+      "label": "What writes the switch",
+      "sublabel": "Android side, not read"
+    },
+    {
+      "id": "switch",
+      "lane": "store",
+      "col": 1,
+      "type": "database",
+      "label": "persistent, last byte",
+      "sublabel": "non-zero = allowed"
+    },
+    {
+      "id": "record",
+      "lane": "store",
+      "col": 3,
+      "type": "database",
+      "label": "miscdata + 0x2000",
+      "sublabel": "the 64-byte unlock record"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-oem-swriter",
+      "from": "oem",
+      "to": "swriter",
+      "variant": "dashed"
+    },
+    {
+      "id": "e-swriter-switch",
+      "from": "swriter",
+      "to": "switch",
+      "label": "last byte",
+      "variant": "dashed"
+    },
+    {
+      "id": "e-oem-keys",
+      "from": "oem",
+      "to": "keys",
+      "label": "then"
+    },
+    {
+      "id": "e-keys-long",
+      "from": "keys",
+      "to": "longpress",
+      "label": "warning screen",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e-long-possible",
+      "from": "longpress",
+      "to": "possible",
+      "label": "asks lk",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e-switch-possible",
+      "from": "switch",
+      "to": "possible",
+      "label": "zero = no",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "e-kg-possible",
+      "from": "kg",
+      "to": "possible",
+      "label": "0x20 = no",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "e-possible-wipe",
+      "from": "possible",
+      "to": "wipe",
+      "label": "yes",
+      "variant": "security",
+      "role": "branch"
+    },
+    {
+      "id": "e-possible-writer",
+      "from": "possible",
+      "to": "recwriter",
+      "variant": "dashed"
+    },
+    {
+      "id": "e-writer-record",
+      "from": "recwriter",
+      "to": "record",
+      "label": "writes",
+      "variant": "dashed"
+    },
+    {
+      "id": "e-record-read",
+      "from": "record",
+      "to": "readrec",
+      "label": "next boot"
+    },
+    {
+      "id": "e-read-trusty",
+      "from": "readrec",
+      "to": "trusty",
+      "label": "smc 0x33",
+      "variant": "security"
+    },
+    {
+      "id": "e-derive-trusty",
+      "from": "derive",
+      "to": "trusty",
+      "label": "key",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "e-trusty-result",
+      "from": "trusty",
+      "to": "result",
+      "label": "0",
+      "variant": "security"
+    },
+    {
+      "id": "e-result-readback",
+      "from": "result",
+      "to": "readback",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Read from the code",
+      "items": [
+        "OEM unlocking is one byte: the last byte of the persistent partition, non-zero = allowed",
+        "Power off, hold both volume keys, plug in the cable: a warning screen",
+        "Long-press Volume Up unlocks, and this wipes the tablet",
+        "Short press is plain Download Mode and writes nothing",
+        "lk decides if an unlock is possible and logs it as is_oem_unlock_possible",
+        "Already unlocked: yes. Switch byte zero: no. Otherwise it depends on Knox Guard",
+        "Knox Guard says no for state PRENORMAL, ACTIVE, LOCKED or ERROR, or if one more check returns 0x20",
+        "The unlock record is 64 bytes at offset 0x2000 in the miscdata partition",
+        "Every boot after, lk reads the record and sends it with command 0x33",
+        "It counts as unlocked only if the call returns 0 and a byte in the reply is set",
+        "Secure-world read (separate): Trusty recomputes the expected 64 bytes from a key derived from the chip's hardware key and compares",
+        "If that key is tied to the chip, as its label says, the record cannot be forged by writing bytes to miscdata and will not verify on another tablet (the derivation was not read)",
+        "Result: lk appends androidboot.flash.locked=0 and the boot state is orange"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Seen on the tablets",
+      "items": [
+        "KG STATE showed \"completed\" before the unlock",
+        "After it: flash.locked 0 and boot state orange",
+        "ro.boot.flash.locked reads back 0",
+        "Done on two SM-X200 units"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Not read",
+      "items": [
+        "What writes the switch byte on the Android side",
+        "What writes the unlock record, and what is in its 64 bytes (not read from lk)",
+        "The extra Knox Guard check that can return 0x20",
+        "The key derivation itself"
+      ]
+    }
+  ]
+}

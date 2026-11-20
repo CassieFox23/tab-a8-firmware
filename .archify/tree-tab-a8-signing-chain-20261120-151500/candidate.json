@@ -77,14 +77,15 @@
       "title": "How each link was shown",
       "items": [
         "Signed by: the RSA-PSS signature verifies against the key in the file's own certificate",
-        "Names: the certificate carries the SHA-256 of the next key, and that hash matches"
+        "Names: the certificate carries the SHA-256 of the next key, and that hash matches",
+        "In code: the SPL checks sml, trustos and lk against the key hash it carries"
       ]
     },
     {
       "dot": "rose",
       "title": "Not shown",
       "items": [
-        "What trusts key A, and whether the code checks each link at boot",
+        "What trusts key A",
         "grd_fw.img: no known header, looks random, not in this chain"
       ]
     }

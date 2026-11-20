@@ -5659,6 +5659,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           <li>lk reads the state back: 0 Samsung key, 1 user key, 2 unlocked, 3 failed (green/yellow/orange/red)</li>
           <li>A failed (red) state drops to Download Mode (Odin), not a boot</li>
           <li>lk also runs its own libavb - it checks the signature and feeds the kernel cmdline, not the state gate</li>
+          <li>The state becomes androidboot.verifiedbootstate: 1 yellow, 2 orange, 3 red, anything else green</li>
         </ul>
       </div>
 
@@ -5669,8 +5670,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         </div>
         <ul>
           <li>What trusts key A, below the SPL</li>
-          <li>The code that turns the state number into the colour string</li>
-          <li>Which of lk&#39;s two vbmeta paths the boot ultimately trusts</li>
+          <li>What sits behind lk&#39;s own key-trust check</li>
         </ul>
       </div>
     </div>

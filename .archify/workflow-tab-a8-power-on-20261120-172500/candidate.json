@@ -1,0 +1,385 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "What happens when you press power on the Tab A8 (X200XXS6DYG6)",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "output": ".archify/workflow-tab-a8-power-on-20261120-172500/tab-a8-power-on.html",
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "you, and what you get"
+        },
+        "backend": {
+          "label": "bootloader code that was read"
+        },
+        "security": {
+          "label": "secure world (Trusty), read"
+        },
+        "external": {
+          "label": "not read"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "pre",
+      "label": "Before the first loader"
+    },
+    {
+      "id": "spl",
+      "label": "First loader (SPL)"
+    },
+    {
+      "id": "lk",
+      "label": "lk (bootloader)"
+    },
+    {
+      "id": "tee",
+      "label": "Secure world (Trusty)",
+      "variant": "exception"
+    },
+    {
+      "id": "act",
+      "label": "What lk does with the state"
+    },
+    {
+      "id": "out",
+      "label": "What you get"
+    }
+  ],
+  "mainPath": [
+    "power",
+    "rom",
+    "spl",
+    "lkread",
+    "ask33",
+    "locked",
+    "ask20",
+    "gy",
+    "normal"
+  ],
+  "nodes": [
+    {
+      "id": "power",
+      "lane": "pre",
+      "col": 0,
+      "type": "frontend",
+      "label": "Power on",
+      "sublabel": "you press the key"
+    },
+    {
+      "id": "rom",
+      "lane": "pre",
+      "col": 1,
+      "type": "external",
+      "label": "What checks the SPL",
+      "sublabel": "not read"
+    },
+    {
+      "id": "spl",
+      "lane": "spl",
+      "col": 1,
+      "type": "backend",
+      "label": "SPL checks sml, trustos, lk",
+      "sublabel": "against a key hash it carries"
+    },
+    {
+      "id": "backup",
+      "lane": "spl",
+      "col": 2,
+      "type": "backend",
+      "label": "Try the _bak copy",
+      "sublabel": "of the stage that failed"
+    },
+    {
+      "id": "spin",
+      "lane": "spl",
+      "col": 3,
+      "type": "backend",
+      "label": "Endless loop",
+      "sublabel": "no boot"
+    },
+    {
+      "id": "lkread",
+      "lane": "lk",
+      "col": 1,
+      "type": "backend",
+      "label": "lk reads the unlock record",
+      "sublabel": "miscdata partition"
+    },
+    {
+      "id": "locked",
+      "lane": "lk",
+      "col": 2,
+      "type": "backend",
+      "label": "Locked or unlocked",
+      "sublabel": "from the 0x33 answer"
+    },
+    {
+      "id": "avb",
+      "lane": "lk",
+      "col": 3,
+      "type": "backend",
+      "label": "lk's own libavb check",
+      "sublabel": "logged, feeds the cmdline"
+    },
+    {
+      "id": "trust",
+      "lane": "lk",
+      "col": 4,
+      "type": "external",
+      "label": "Behind lk's key-trust check",
+      "sublabel": "not read"
+    },
+    {
+      "id": "ask33",
+      "lane": "tee",
+      "col": 1,
+      "type": "security",
+      "label": "command 0x33",
+      "sublabel": "is the record genuine?"
+    },
+    {
+      "id": "ask20",
+      "lane": "tee",
+      "col": 3,
+      "type": "security",
+      "label": "command 0x20",
+      "sublabel": "boot or recovery image"
+    },
+    {
+      "id": "orange",
+      "lane": "act",
+      "col": 2,
+      "type": "backend",
+      "label": "Orange (state 2)",
+      "sublabel": "waits up to 10000 ticks"
+    },
+    {
+      "id": "tosloop",
+      "lane": "act",
+      "col": 3,
+      "type": "backend",
+      "label": "tos return error!",
+      "sublabel": "logged, loops forever"
+    },
+    {
+      "id": "gy",
+      "lane": "act",
+      "col": 5,
+      "type": "backend",
+      "label": "Green (0) or yellow (1)",
+      "sublabel": "logs a line, carries on"
+    },
+    {
+      "id": "red",
+      "lane": "act",
+      "col": 4,
+      "type": "backend",
+      "label": "Red (state 3)",
+      "sublabel": "prints a message"
+    },
+    {
+      "id": "shows",
+      "lane": "out",
+      "col": 2,
+      "type": "external",
+      "label": "What the orange step shows",
+      "sublabel": "three calls, not read"
+    },
+    {
+      "id": "warn",
+      "lane": "out",
+      "col": 3,
+      "type": "frontend",
+      "label": "Boots with a warning",
+      "sublabel": "orange, after the wait"
+    },
+    {
+      "id": "normal",
+      "lane": "out",
+      "col": 5,
+      "type": "frontend",
+      "label": "Boots normally",
+      "sublabel": "green or yellow"
+    },
+    {
+      "id": "dl",
+      "lane": "out",
+      "col": 4,
+      "type": "frontend",
+      "label": "Download Mode (Odin)",
+      "sublabel": "stays there, no boot"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-power-rom",
+      "from": "power",
+      "to": "rom",
+      "variant": "dashed"
+    },
+    {
+      "id": "e-rom-spl",
+      "from": "rom",
+      "to": "spl",
+      "label": "checks",
+      "variant": "dashed"
+    },
+    {
+      "id": "e-spl-backup",
+      "from": "spl",
+      "to": "backup",
+      "label": "one fails",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "e-backup-spin",
+      "from": "backup",
+      "to": "spin",
+      "label": "fails too",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "e-spl-lk",
+      "from": "spl",
+      "to": "lkread",
+      "label": "all pass",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e-lk-33",
+      "from": "lkread",
+      "to": "ask33",
+      "label": "smc",
+      "variant": "security"
+    },
+    {
+      "id": "e-33-locked",
+      "from": "ask33",
+      "to": "locked",
+      "label": "answer",
+      "variant": "security"
+    },
+    {
+      "id": "e-locked-orange",
+      "from": "locked",
+      "to": "orange",
+      "label": "unlocked: skip 0x20"
+    },
+    {
+      "id": "e-locked-20",
+      "from": "locked",
+      "to": "ask20",
+      "label": "locked",
+      "variant": "security"
+    },
+    {
+      "id": "e-locked-avb",
+      "from": "locked",
+      "to": "avb",
+      "label": "always",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "e-avb-trust",
+      "from": "avb",
+      "to": "trust",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "e-20-loop",
+      "from": "ask20",
+      "to": "tosloop",
+      "label": "reply mismatch",
+      "variant": "dashed",
+      "role": "error"
+    },
+    {
+      "id": "e-20-gy",
+      "from": "ask20",
+      "to": "gy",
+      "label": "0 green, 5 yellow",
+      "variant": "security"
+    },
+    {
+      "id": "e-20-red",
+      "from": "ask20",
+      "to": "red",
+      "label": "anything else",
+      "variant": "security"
+    },
+    {
+      "id": "e-orange-shows",
+      "from": "orange",
+      "to": "shows",
+      "variant": "dashed"
+    },
+    {
+      "id": "e-shows-warn",
+      "from": "shows",
+      "to": "warn",
+      "label": "then boots",
+      "variant": "dashed"
+    },
+    {
+      "id": "e-gy-normal",
+      "from": "gy",
+      "to": "normal",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e-red-dl",
+      "from": "red",
+      "to": "dl",
+      "variant": "security"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Read from the code",
+      "items": [
+        "The SPL checks sml, trustos and lk against a key fingerprint it carries",
+        "One check fails: it tries the backup copy. That fails too: an endless loop",
+        "lk asks the secure world (command 0x33) if the miscdata unlock record is genuine",
+        "That gives locked or unlocked",
+        "Unlocked: the secure-world check of boot/recovery is skipped, state 2 (orange)",
+        "Locked: lk sends the image with command 0x20. Result 0 is state 0 (green), 5 is state 1 (yellow), anything else state 3 (red)",
+        "Locked and not booting recovery: vbmeta_system is checked the same way",
+        "Reply does not match the call's return: lk logs tos return error! and loops forever",
+        "lk always runs its own libavb too; its result is logged and feeds the kernel command line, it does not set the state",
+        "Green or yellow: lk logs a line and carries on booting",
+        "Orange: a wait of up to 10000 ticks, then it carries on booting",
+        "Red: a message on screen, then Download Mode (Odin), and it stays there",
+        "Android gets androidboot.verifiedbootstate=green|yellow|orange|red (green for any unknown number)",
+        "Beside it: androidboot.flash.locked=0|1"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Seen on the tablets",
+      "items": [
+        "After unlocking, on both real tablets: flash.locked 0, verifiedbootstate orange",
+        "LineageOS boots"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Not read",
+      "items": [
+        "What trusts the first loader (SPL) itself",
+        "What the orange step shows on screen: the unlocked warning is most likely this step, but its three calls were not read",
+        "What sits behind lk's own key-trust check",
+        "Which images besides boot and recovery go through the loader path"
+      ]
+    }
+  ]
+}
