@@ -73,9 +73,9 @@ finish line: the secure world row of the comparison is filled.
 
 ## phase 6 - putting the two side by side
 
-- [ ] the comparison page finished
-- [ ] diagrams - the tablet's boot chain, and the two devices next to each other
-- [ ] the README rewritten around what was found
+- [x] the comparison page finished - every cell read, no "not read yet"
+- [x] diagrams - the tablet's boot chain (refreshed for the secure-world read), and the two devices next to each other
+- [x] the README rewritten around what was found
 
 ## phase 7 - review, then public
 

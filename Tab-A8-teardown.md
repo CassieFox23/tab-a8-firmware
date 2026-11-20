@@ -320,7 +320,7 @@ python3 tools/a64_refs.py lk.body 0x9f000000 "SECUREBOOT_ENABLE" "Device Status 
 
 the A10e column is from its [teardown](https://github.com/CassieFox23/a10e-firmware/blob/master/A10e-teardown.md).
 
-the big difference is where the decisions sit. on the A10e they're in the bootloader you can read. here the bootloader asks the secure world about both: the unlock state, and the vbmeta check whose answer sets the boot state. `lk` runs its own libavb too, but that feeds the kernel cmdline and root of trust - the orange/green/red gate is the secure world's. what's behind the `smc` belongs to [the secure world](#the-secure-world).
+the big difference is where the decisions sit. on the A10e they're in the bootloader you can read. here the bootloader asks the secure world about both: the unlock state, and the vbmeta check whose answer sets the boot state. `lk` runs its own libavb too, but that feeds the kernel cmdline - the orange/green/red gate and the root of trust both come from the secure-world check. what's behind the `smc` belongs to [the secure world](#the-secure-world).
 
 one thing the firmware does say: the vendor's `default.prop` has `ro.oem_unlock_supported=1`. the A10e had that same line and still wouldn't unlock, so on its own it settles nothing.
 
