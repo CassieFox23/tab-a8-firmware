@@ -307,24 +307,27 @@ python3 tools/a64_refs.py lk.body 0x9f000000 "SECUREBOOT_ENABLE" "Device Status 
   | `0` | logs `WARNNING: OEM KEY VERIFY SUCCESS!!!` and returns |
   | `1` | logs `WARNNING: USER KEY VERIFY SUCCESS!!!` and returns |
   | `2` | calls `0x9f057548`, then polls `0x9f002680` every 10 ticks for up to 10000, then `0x9f05741c`. the unlocked path, so most likely the warning the tablets show at startup - the three calls weren't read |
-  | `3` | prints `TO be implement Reason` to the screen, calls `0x9f0121a8`, logs `WARNNING: Oem Key & User Key Verify Failed!!!`, waits 60 x 100 ticks, and **returns** |
+  | `3` | prints `TO be implement Reason` to the screen, calls `0x9f0121a8` - which goes into **Download Mode** - and only if that comes back logs `WARNNING: Oem Key & User Key Verify Failed!!!`, waits 60 x 100 ticks and returns |
   | other | logs `WARNNING: VERIFY RESULT UNKNOWN!!!` |
 
-  so going by its own log lines the numbers are `0` Samsung's key, `1` a user key, `2` unlocked, `3` failed - which fits green, yellow, orange, red, though the code that picks the colour string still wasn't read. and nothing in this function stops a `3`: unless `0x9f0121a8` never comes back, it waits and carries on. `0x9f0121a8` wasn't read, so what a locked tablet does with a failed check is still open - it's down to that one function
+  so going by its own log lines the numbers are `0` Samsung's key, `1` a user key, `2` unlocked, `3` failed - which fits green, yellow, orange, red, though the code that picks the colour string still wasn't read.
+
+  **so a locked tablet that fails the check lands in Download Mode.** `0x9f0121a8` logs `enter fastboot_mode`, sets the mode name to `fastboot`, logs `enter odin mode` and jumps to `0x9f018748`. that one logs `start Odin Mode...`, draws the download logo and the Download Mode screen (`0x9f0364fc`, the same one as above), brings USB up and then loops on the Odin handler with no way out of the loop. the one exit is before the loop: if its setup call `0x9f0164fc` returns an error, it returns, and then `0x9f01098c` waits and the boot carries on. what makes that setup call fail wasn't read
 - **`0x9f0349a0` is Samsung's own tally** (`check_secure_boot` in its log lines). it goes through `vbmeta` and then `boot`, `l_agdsp`, `uboot`, `trustos` and `super` (or just `recovery`), and marks each `SAMSUNG` or `CUSTOM`. it only looks at the boot state to skip some of the marking when the state is `3`. this is where the official-or-custom binary status comes from, not a gate
 - **`0x9f112fe4` copies it out** (`populate rot info for grdm`): the state, whether the tablet is locked, a hash taken from `lk`'s own header at `0x9efffe00`, and the OS version and patch levels, into one record. what `grdm` is wasn't read
 
 an earlier pass of this page listed a fourth reader, `0x9f014508`. that was wrong: it reads offset `0x10` of the boot image header, which sits in the same memory page at `0x9f435aa0`.
 
 ```
-python3 tools/a64_refs.py lk.body 0x9f000000 "WARNNING: OEM KEY" "WARNNING: USER KEY"   # reports the function as 0x9f010990, Ghidra as 0x9f01098c
+python3 tools/a64_refs.py lk.body 0x9f000000 "WARNNING: OEM KEY" "WARNNING: USER KEY" "start Odin Mode"   # reports the function as 0x9f010990, Ghidra as 0x9f01098c
 ```
 
 the other two were found by scanning for loads of `0x9f435010` and then decompiled; their log strings are built in ways `a64_refs.py` doesn't follow.
 
 *not read:*
 
-- `0x9f0121a8`, the one call that decides what a locked tablet does with a failed check, and the code that turns the state number into the colour string
+- the code that turns the state number into the colour string
+- `0x9f0164fc`, the setup call whose failure is the only way out of Download Mode on a failed check
 - what Trusty does with commands `0x20` and `0x33` - that's the secure world's side, [below](#the-secure-world)
 - what sits behind `lk`'s "is this key trusted" slot (`0x9f9ae060` + `0x30`)
 - who writes the `miscdata` record when you unlock, and what's in its 64 bytes
@@ -372,9 +375,7 @@ the hash of this key is carried in the bootloader's own signed certificate - see
 
 the code behind that is in [what lk does about verified boot](#what-lk-does-about-verified-boot): when the tablet is unlocked, the boot state is set without looking at the check's result.
 
-*not read yet:*
-
-- what the bootloader does next with a failed check while **locked**
+and a failed check while **locked** ends in Download Mode - the same section has the read.
 
 ## why a GSI fits
 
