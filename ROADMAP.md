@@ -66,7 +66,7 @@ finish line: the boot chain section of [`Tab-A8-teardown.md`](Tab-A8-teardown.md
 
 - [x] which TEE this chip runs, from the firmware's own files - Trusty, three ways
 - [x] what Trusty does with the bootloader's two commands - `0x33` an unlock token Trusty vouches for (device-bound if its key label holds), `0x20` libavb
-- [x] what the SELinux policy lets a normal app reach - only the media HALs (Widevine, codec, CAS), never the key ones
+- [x] what the SELinux policy lets a normal app reach - of the HALs that touch the TEE, only the media ones (Widevine, codec), never the key ones
 - [x] picture: the secure world and the fence around it
 
 finish line: the secure world row of the comparison is filled.

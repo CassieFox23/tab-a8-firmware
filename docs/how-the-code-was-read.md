@@ -39,7 +39,7 @@ the pattern is always the same: `open` the image, `procedure_pseudo_code` to rea
 the two images are carved from the stock BL bundle:
 
 - `lk.body` is the 4,402,800-byte body of `lk-sign.bin` - the bytes after the 512-byte DHTB header and before the trailing certificate: `tail -c +513 lk-sign.bin | head -c 4402800` - loaded at `0x9f000000`
-- `tos-kernel.body` is the first `0xbc000` bytes of `tos-sign.bin`'s body (the Trusty kernel, before the packed apps), loaded at `0xffffffffe0000000`
+- `tos-kernel.body` is the first `0xbc000` bytes of `tos-sign.bin`'s body (the Trusty kernel, before the packed apps): `tail -c +513 tos-sign.bin | head -c 770048` - loaded at `0xffffffffe0000000`
 
 both load addresses come from `tools/pin_base.py`. open either image at its address in REA and the function addresses named in the [teardown](../Tab-A8-teardown.md) resolve.
 
