@@ -11,24 +11,24 @@ BLUEPRINT.scene('tab-a8-power-on', {
   title: 'What happens when you press power on a Galaxy Tab A8',
   fig: 1,
   sheet: 'SHEET 1 OF 1',
-  size: [800, 400],
+  size: [860, 460],
   parts: [
     // top row, the relay: power -> SPL -> sml -> Trusty
-    { id: 'power', kind: 'box', at: [70, 95], size: [84, 50], label: 'POWER ON', n: 1, lead: 'n', name: 'Power on', note: 'you press the power key' },
-    { id: 'spl', kind: 'box', at: [200, 95], size: [84, 56], label: 'SPL', n: 2, lead: 'sw', name: 'SPL', note: 'the first small loader; what checks it is not in the files read' },
-    { id: 'key', kind: 'key', at: [200, 38], labelAt: 'e', label: 'KEY FINGERPRINT', n: 3, lead: 'w', name: 'Key fingerprint', note: 'a key fingerprint the SPL carries; each piece it loads is checked against it' },
-    { id: 'rack', kind: 'queue', at: [200, 190], size: [130, 30], slots: 4, count: 0, label: 'TEECFG SML\nTRUSTOS LK', n: 4, lead: 'ne', name: 'Next pieces', note: 'teecfg, sml, trustos and lk: the four pieces the SPL loads' },
-    { id: 'sml', kind: 'box', at: [420, 95], size: [88, 50], label: 'SML', n: 5, lead: 'ne', name: 'sml', note: 'the secure-world monitor; it starts with Trusty, the secure world' },
-    { id: 'zone', kind: 'zone', at: [650, 95], size: [170, 130], label: 'SECURE WORLD' },
-    { id: 'trusty', kind: 'box', at: [650, 95], size: [100, 50], label: 'TRUSTY', n: 6, lead: 'ne', name: 'Trusty', note: 'the secure world; lk asks it two things (commands 0x33 and 0x20)' },
+    { id: 'power', kind: 'box', at: [70, 105], size: [84, 50], label: 'POWER ON', n: 1, lead: 'n', name: 'Power on', note: 'you press the power key' },
+    { id: 'spl', kind: 'box', at: [200, 105], size: [84, 56], label: 'SPL', n: 2, lead: 'sw', name: 'SPL', note: 'the first small loader; what checks it is not in the files read' },
+    { id: 'key', kind: 'key', at: [200, 48], labelAt: 'e', label: 'KEY FINGERPRINT', n: 3, lead: 'w', name: 'Key fingerprint', note: 'a key fingerprint the SPL carries; each piece it loads is checked against it' },
+    { id: 'rack', kind: 'queue', at: [200, 195], size: [130, 30], slots: 4, count: 0, label: 'TEECFG SML\nTRUSTOS LK', n: 4, lead: 'se', name: 'Next pieces', note: 'teecfg, sml, trustos and lk: the four pieces the SPL loads' },
+    { id: 'sml', kind: 'box', at: [420, 105], size: [88, 50], label: 'SML', n: 5, lead: 'ne', name: 'sml', note: 'the secure-world monitor; it starts with Trusty, the secure world' },
+    { id: 'zone', kind: 'zone', at: [720, 105], size: [170, 130], label: 'SECURE WORLD' },
+    { id: 'trusty', kind: 'box', at: [720, 105], size: [100, 50], label: 'TRUSTY', n: 6, lead: 'ne', name: 'Trusty', note: 'the secure world; lk asks it two things (commands 0x33 and 0x20)' },
     // middle and bottom: lk and what it does
-    { id: 'lk', kind: 'box', at: [420, 265], size: [100, 56], label: 'LK', n: 7, lead: 'sw', name: 'lk', note: 'the main bootloader; how control gets to it was not read' },
-    { id: 'record', kind: 'book', at: [220, 265], label: 'MISCDATA', n: 8, lead: 'w', name: 'Unlock record', note: 'a small record in the miscdata partition' },
-    { id: 'lamp', kind: 'lamp', at: [560, 265], on: 0, label: 'COLOUR', n: 9, lead: [34, -14], name: 'Boot state', note: 'green, yellow, orange or red; "green" and "yellow" are the names in the bootloader\'s own log lines' },
-    { id: 'sieve', kind: 'sieve', at: [420, 345], labelAt: 'e', label: 'LK OWN\nCHECK', n: 10, lead: 'ne', name: 'lk\'s own check', note: 'always runs on the same signatures; the answer is logged and goes to the kernel command line, but does not set the colour' },
-    { id: 'junc', kind: 'dot', at: [610, 265] },
-    { id: 'android', kind: 'screen', at: [690, 265], size: [100, 70], label: 'ANDROID', n: 11, lead: 'ne', name: 'Android', note: 'gets the colour as androidboot.verifiedbootstate=green, yellow, orange or red' },
-    { id: 'dl', kind: 'box', at: [610, 350], size: [110, 40], label: 'DOWNLOAD MODE', n: 12, lead: 'w', name: 'Download Mode', note: 'where red waits to be flashed; in the code as read it stays there' }
+    { id: 'lk', kind: 'box', at: [420, 290], size: [100, 56], label: 'LK', n: 7, lead: 'sw', name: 'lk', note: 'the main bootloader; how control gets to it was not read' },
+    { id: 'record', kind: 'book', at: [220, 290], label: 'MISCDATA', n: 8, lead: 'w', name: 'Unlock record', note: 'a small record in the miscdata partition' },
+    { id: 'lamp', kind: 'lamp', at: [560, 290], on: 0, label: 'COLOUR', n: 9, lead: [34, -14], name: 'Boot state', note: 'green, yellow, orange or red; "green" and "yellow" are the names in the bootloader\'s own log lines' },
+    { id: 'sieve', kind: 'sieve', at: [420, 385], labelAt: 'e', label: 'LK OWN\nCHECK', n: 10, lead: 's', leadLen: 16, name: 'lk\'s own check', note: 'always runs on the same signatures; the answer is logged and goes to the kernel command line, but does not set the colour' },
+    { id: 'junc', kind: 'dot', at: [610, 290] },
+    { id: 'android', kind: 'screen', at: [730, 290], size: [100, 70], label: 'ANDROID', n: 11, lead: 'e', name: 'Android', note: 'gets the colour as androidboot.verifiedbootstate=green, yellow, orange or red' },
+    { id: 'dl', kind: 'box', at: [610, 380], size: [110, 40], label: 'DOWNLOAD MODE', n: 12, lead: 'sw', name: 'Download Mode', note: 'where red waits to be flashed; in the code as read it stays there' }
   ],
   lines: [
     { id: 'go', from: 'power.e', to: 'spl.w', arrow: true },
@@ -36,9 +36,9 @@ BLUEPRINT.scene('tab-a8-power-on', {
     { id: 'load', from: 'spl.s', to: 'rack.n', arrow: true },
     { id: 'jump', from: 'spl.e', to: 'sml.w', label: 'JUMPS TO', arrow: true },
     { id: 'start', from: 'sml.e', to: 'trusty.w', label: 'THEN', arrow: true },
-    { id: 'hop', from: 'sml.s', to: 'lk.n', kind: 'wire', label: 'HAND-OFF: NOT READ', labelPos: 0.35 },
+    { id: 'hop', from: 'sml.s', to: 'lk.n', kind: 'wire' },
     { id: 'rd', from: 'record.e', to: 'lk.w', label: 'READS', arrow: true },
-    { id: 'ask', from: 'lk.n+30', to: 'trusty.s', via: [[450, 200], [650, 200]], arrow: true },
+    { id: 'ask', from: 'lk.n+30', to: 'trusty.s', via: [[450, 210], [720, 210]], arrow: true },
     { id: 'colour', from: 'lk.e', to: 'lamp.w', arrow: true },
     { id: 'wk', from: 'lk.s', to: 'sieve.n', kind: 'wire' },
     { id: 'out1', from: 'lamp.e', to: 'junc' },
@@ -49,7 +49,7 @@ BLUEPRINT.scene('tab-a8-power-on', {
     {
       say: 'You press power (1), and the first small loader, the SPL (2), starts.',
       draw: ['power', 'go', 'spl'],
-      note: { at: 'power.s', text: 'WHAT CHECKS\nTHE SPL:\nNOT READ', keep: true }
+      note: { at: 'power.s', dx: -42, anchor: 'start', text: 'WHAT CHECKS\nTHE SPL:\nNOT READ', keep: true }
     },
     {
       say: 'It carries a key fingerprint (3), loads four pieces (4) and checks each one against it.',
@@ -80,7 +80,8 @@ BLUEPRINT.scene('tab-a8-power-on', {
       say: 'Then lk (7), the main bootloader, runs, but it must learn if the owner unlocked the tablet.',
       view: 'all',
       draw: ['hop', 'lk'],
-      glow: ['lk']
+      glow: ['lk'],
+      note: { at: [500, 160], dx: 0, dy: 0, anchor: 'middle', text: 'HAND-OFF: NOT READ', keep: true }
     },
     {
       say: 'So lk reads a small record (8) and asks the secure world if it is genuine: locked or unlocked.',
@@ -90,7 +91,7 @@ BLUEPRINT.scene('tab-a8-power-on', {
         { on: 'ask', item: 'chip', text: '0x33', dur: 1.6, arrive: { glow: ['trusty'] } },
         { on: 'ask', back: true, item: 'chip', text: 'ANSWER', dur: 1.6 }
       ],
-      note: { at: [478, 214], dx: 0, dy: 0, anchor: 'start', text: 'COMMAND 0x33:\nGENUINE RECORD?\nLOCKED/UNLOCKED' }
+      note: { at: [486, 230], dx: 0, dy: 0, anchor: 'start', text: 'COMMAND 0x33:\nGENUINE RECORD?\nLOCKED/UNLOCKED' }
     },
     {
       say: 'But a locked tablet must not run a tampered system, so Trusty (6) checks its boot image.',
@@ -101,14 +102,14 @@ BLUEPRINT.scene('tab-a8-power-on', {
         { on: 'colour', item: 'chip', text: 'GREEN', color: 'ok', dur: 0.9, arrive: { set: { lamp: { on: 1, text: 'GREEN' } }, glow: ['lamp'] } }
       ],
       note: [
-        { at: [550, 200], dx: 0, dy: -8, anchor: 'middle', text: 'COMMAND 0x20' },
-        { at: [478, 214], dx: 0, dy: 0, anchor: 'start', text: 'GREEN: SAMSUNG KEY\nYELLOW: OTHER KEY\nRED: ANYTHING ELSE' },
-        { at: 'sieve.w', text: 'LOGGED, FEEDS\nTHE KERNEL\nCOMMAND LINE;\nNOT THE COLOUR', keep: true }
+        { at: [550, 210], dx: 0, dy: -8, anchor: 'middle', text: 'COMMAND 0x20' },
+        { at: [486, 230], dx: 0, dy: 0, anchor: 'start', text: 'GREEN: SAMSUNG KEY\nYELLOW: OTHER KEY\nRED: ANYTHING ELSE' },
+        { at: 'sieve.w', dx: -16, text: 'LOGGED, FEEDS\nTHE KERNEL\nCOMMAND LINE;\nNOT THE COLOUR', keep: true }
       ]
     },
     {
       say: 'But an unlocked tablet may run something else, so lk skips the check and the colour (9) is orange.',
-      view: [270, 150, 530, 250],
+      view: [270, 190, 590, 270],
       draw: ['out1', 'junc', 'out2', 'android'],
       set: { lamp: { on: 0, text: 'COLOUR' } },
       run: [
@@ -117,8 +118,8 @@ BLUEPRINT.scene('tab-a8-power-on', {
         { on: 'out2', item: 'ball', dur: 0.6, arrive: { glow: ['android'] } }
       ],
       note: [
-        { at: [478, 214], dx: 0, dy: 0, anchor: 'start', text: 'NO 0x20 CHECK;\nORANGE WAITS A\nMOMENT, THEN BOOTS' },
-        { at: [672, 322], dx: 0, dy: 0, anchor: 'start', text: 'GREEN OR YELLOW:\nLOGS A LINE,\nTHEN BOOTS' }
+        { at: [486, 230], dx: 0, dy: 0, anchor: 'start', text: 'NO 0x20 CHECK;\nORANGE WAITS A\nMOMENT, THEN BOOTS' },
+        { at: [700, 366], dx: 0, dy: 0, anchor: 'start', text: 'GREEN OR YELLOW:\nLOGS A LINE,\nTHEN BOOTS' }
       ]
     },
     {
@@ -130,7 +131,7 @@ BLUEPRINT.scene('tab-a8-power-on', {
         { on: 'out1', item: 'ball', color: 'fail', dur: 0.6 },
         { on: 'jdl', item: 'ball', color: 'fail', dur: 0.9, arrive: { glow: ['dl'] } }
       ],
-      note: { at: 'dl.e', text: 'WAITS TO BE\nFLASHED; STAYS\nTHERE, AS READ' }
+      note: { at: 'dl.e', dx: 16, text: 'WAITS TO BE\nFLASHED; STAYS\nTHERE, AS READ' }
     },
     {
       say: 'Android (11) gets the colour; two unlocked tablets read orange and booted LineageOS.',
@@ -141,8 +142,8 @@ BLUEPRINT.scene('tab-a8-power-on', {
         { on: 'out2', item: 'ball', dur: 0.6, arrive: { set: { android: { text: 'LINEAGEOS' } } } }
       ],
       note: [
-        { at: 'android.n', dx: -20, anchor: 'middle', text: 'SEEN ON 2 TABLETS' },
-        { at: [672, 322], dx: 0, dy: 0, anchor: 'start', text: 'ANDROIDBOOT.\nVERIFIEDBOOTSTATE=\nGREEN, YELLOW,\nORANGE OR RED' }
+        { at: 'android.n', dx: 0, anchor: 'middle', text: 'SEEN ON 2 TABLETS' },
+        { at: [700, 366], dx: 0, dy: 0, anchor: 'start', text: 'ANDROIDBOOT.\nVERIFIEDBOOTSTATE=\nGREEN, YELLOW,\nORANGE OR RED' }
       ],
       hold: 2.6
     }
