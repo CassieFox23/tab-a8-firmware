@@ -266,7 +266,7 @@ this fits what the real tablets did: their Download Mode screen read `KG STATE` 
 
 ### what lk does about verified boot
 
-the boot flow runs through `0x9f010c48` (it logs `SECUREBOOT ENABLE`): it picks `boot` or `recovery`, calls `0x9f120b00` on that name, then `0x9f121540`, sets the root of trust, and later checks `pm_sys` under a flag. those two calls are the two halves of verified boot - the secure-world check first, then `lk`'s own libavb.
+the boot flow runs through `0x9f010c48` (it logs `SECUREBOOT_ENABLE`): it picks `boot` or `recovery`, calls `0x9f120b00` on that name, then `0x9f121540`, sets the root of trust, and later checks `pm_sys` under a flag. those two calls are the two halves of verified boot - the secure-world check first, then `lk`'s own libavb.
 
 **the boot-state decision: `0x9f120b00`.** given a partition name it:
 
@@ -279,26 +279,28 @@ so the state the tablet boots with is set by the **secure-world** check, and on 
 
 there's a near-twin, `0x9f1206d0`, with the same shape (footer, load vbmeta, command `0x20`, set `0x9f435010`) but a slightly different mapping (its locked-`5` goes to `3`, not `1`). nothing was found calling it - no `bl`/`b`, no `ADRP`+`ADD`, not stored as data - so it reads like a dead or alternate copy, and the live numbers above are `0x9f120b00`'s.
 
-**`lk` also checks vbmeta itself, after that.** `0x9f121540` runs only when the tablet is **not** unlocked and the name isn't `recovery`: it calls `0x9f120b00("vbmeta_system")`, notes `vbmeta_vendor`, `odmko` and `socko` are skipped, and then always calls `0x9f11f9a0` - `lk`'s own libavb:
+**`lk` also checks vbmeta itself, after that.** `0x9f121540` always runs. first, only when the tablet is **not** unlocked and the name isn't `recovery` (and only once - a flag at `0x9f9ac025` remembers), it calls `0x9f120b00("vbmeta_system")` and logs that `vbmeta_vendor`, `odmko` and `socko` are skipped. then, locked or not, it calls `0x9f11f9a0` - `lk`'s own libavb:
 
 - `0x9f11f9a0` → `0x9f124e64` (`avb check image name`) → `avb_slot_verify` (`0x9f129684`) → `load_and_verify_vbmeta` (`0x9f1281e0`) → `avb_vbmeta_image_verify` (`0x9f12a868`)
 - `0x9f12a868` calls SHA-256 and SHA-512 routines and an RSA check at `0x9f126f18` (`Signature length does not match key length.`), so vbmeta's hash and signature are checked by `lk`'s own code
 - whether that key is one to trust is asked through a function pointer - slot `+0x30` of a table at `0x9f9ae060`. the table sits past the end of the file, filled in while `lk` runs, so what's behind the slot wasn't read
 - `0x9f124e64` turns on "allow verification errors" when a flag at `0x9f9af000` is `0` and the unlock check (`0x9f121324`) says unlocked, logging `avb allow verification error in UNLOCK status while normal booting`
-- but `0x9f11f9a0` only logs `avb_check_image`'s return and builds the kernel cmdline from it; in what Ghidra shows that return isn't acted on (it flags a terminal call at `0x9f11fac8`, so the tail may be cut). so `lk`'s libavb feeds the cmdline and the root of trust, while the **boot-state gate is the secure-world `0x20` check above**
+- but `0x9f11f9a0` only logs `avb_check_image`'s return and builds the kernel cmdline from it; in what Ghidra shows that return isn't acted on (it flags a terminal call at `0x9f11fac8`, so the tail may be cut). so `lk`'s libavb feeds the kernel command line, while the **boot-state gate is the secure-world `0x20` check above**. the state global is stored to in three functions only, all of them `0x20` callers: `0x9f120b00`, `0x9f1208b0` and the uncalled `0x9f1206d0`
 
 the libavb names are its own, from each function's log strings. Ghidra starts two of them four bytes earlier than `tools/a64_refs.py` does (`0x9f1281e0`/`0x9f11f9a0` vs `0x9f1281e4`/`0x9f11f9a4`).
 
-**command `0x20` has four callers.** the live one is `0x9f120b00`. the others, by their strings: `0x9f1208b0` (the Cortex-M4 image, `cm4 old img_addr`), `0x9f123d88` (`check vbmeta image.`) and the unreached twin `0x9f1206d0`.
+**command `0x20` has four callers.** two are on the boot path read here: `0x9f120b00`, and `0x9f1208b0`, which `0x9f010c48` calls on `pm_sys` (the Cortex-M4 image) under a flag - that one wasn't read through. `0x9f120b00` has a third call site besides the two above, at `0x9f00efe4`, not read. the other two callers are `0x9f123d88` (`check vbmeta image.`, by its string only) and the uncalled twin `0x9f1206d0`.
+
+`0x9f010c48` itself is reached by 18 plain branches from one stretch of code (`0x9f011eb4` to `0x9f01254c`), which wasn't read.
 
 ```
-python3 tools/a64_refs.py lk.body 0x9f000000 "SECUREBOOT ENABLE" "Device Status is unlock, skip" \
+python3 tools/a64_refs.py lk.body 0x9f000000 "SECUREBOOT_ENABLE" "Device Status is unlock, skip" \
     "avb check image name" "Signature length does not match key length." "check vbmeta image."
 ```
 
 *not read:*
 
-- what reads the boot-state global `0x9f435010` downstream and halts or warns on `red`, and which number maps to which colour
+- what acts on the boot state - halts or warns on `red` - and which number maps to which colour. four functions load the global `0x9f435010`: `0x9f010990`, `0x9f014508`, `0x9f0349a0` and `0x9f112fec`
 - what Trusty does with commands `0x20` and `0x33` - that's the secure world's side, [below](#the-secure-world)
 - what sits behind `lk`'s "is this key trusted" slot (`0x9f9ae060` + `0x30`)
 - who writes the `miscdata` record when you unlock, and what's in its 64 bytes
