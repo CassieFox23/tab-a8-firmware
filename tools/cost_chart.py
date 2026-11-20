@@ -3,7 +3,7 @@
 and the tokens behind it.
 
 No firmware needed, the numbers are written in below. Tokens were counted from
-the three sessions' transcripts (and their helper agents) at about 5:20 PM on
+the three sessions' transcripts (and their helper agents) at about 5:56 PM on
 20 Nov 2026 with two sessions still going, so this is a snapshot. Prices are
 USD per million tokens from models.dev, read the same day. The work ran on a
 subscription: this is an estimate of the per-token price, not a bill.
@@ -28,17 +28,17 @@ OUT = "#a6e3a1"; READ = "#89b4fa"; WRITE = "#cba6f7"; NEW = "#f9e2af"
 # model, where it ran, uncached in, output, cache read, cache write,
 # prices (input, output, cache read, cache write), one-hour cache (True/False)
 MODELS = [
-    ("Fable 5.2", "the build and the review", 736, 329674, 96567949, 889380, (8, 40, 0.2, 10), True),
-    ("Opus 4.8", "most of the secure world", 284, 205770, 44467067, 334808, (5, 25, 0.5, 6.25), True),
-    ("Sonnet 5.5", "two helper agents", 190, 59008, 12128201, 386143, (2, 10, 0.1, 2.5), False),
+    ("Fable 5.2", "the build and the review", 902, 410031, 138119018, 1087840, (8, 40, 0.2, 10), True),
+    ("Opus 4.8", "most of the secure world", 400, 321312, 76446581, 476338, (5, 25, 0.5, 6.25), True),
+    ("Sonnet 5.5", "five helper agents", 526, 227991, 34245203, 1099116, (2, 10, 0.1, 2.5), False),
     ("Opus 5.5", "start of the secure world", 74, 24871, 3768173, 144437, (4, 20, 0.2, 5), True),
     ("Haiku 5.5", "one helper agent", 30, 36274, 637626, 81089, (0.1, 0.5, 0.01, 0.125), False),
 ]
 # session, written, new input, re-read from cache (tokens)
 SESSIONS = [
     ("the build", 240_000, 775_000, 71_400_000),
-    ("the secure world", 267_000, 561_000, 48_900_000),
-    ("the review", 139_000, 481_000, 33_700_000),
+    ("the secure world", 382_000, 702_000, 80_900_000),
+    ("the review", 398_000, 1_414_000, 100_900_000),
 ]
 
 out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
@@ -111,7 +111,7 @@ for j, (colour, text) in enumerate(((OUT, "written"), (NEW, "new input"),
     b.text(x + wide * 0.025, -0.95, text, ha="left", va="center", fontsize=9.5, color=MUTED)
 
 fig.text(0.02, 0.01, "an estimate, not a bill: the work ran on a subscription. counted from the sessions' transcripts "
-         "at about 5:20 PM on 20 Nov 2026, two sessions still going. prices from models.dev.",
+         "at about 5:56 PM on 20 Nov 2026, two sessions still going. prices from models.dev.",
          fontsize=9, color=MUTED)
 fig.subplots_adjust(hspace=0.08)
 fig.savefig(out, bbox_inches="tight", pad_inches=0.3)
