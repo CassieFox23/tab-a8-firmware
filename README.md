@@ -4,7 +4,7 @@ a static read of the stock firmware on a **Samsung Galaxy Tab A8 (SM-X200)** - t
 
 **the read is in.** the build, the chip, the partition map and verified boot's metadata; why a current GSI fits; the whole bootloader signing chain worked out from the hashes; the two main bootloader stages read for how they check each other, where the unlock state lives and what Knox Guard gates; and the secure world - which TEE this chip runs, what the bootloader asks it, and what keeps apps away from it. there's a LineageOS how-to too, from two real flashes. [`ROADMAP.md`](ROADMAP.md) has the phases; what's still open is listed at the foot of each section of the [teardown](Tab-A8-teardown.md).
 
-the short of it: on this tablet the decisions that matter sit in the **secure world**, not in the bootloader you can read. a little-kernel TEE (Trusty) judges a device-bound unlock token and runs the vbmeta check that sets the boot state, and the bootloader goes by its answers. that's the opposite of the A10e, where those decisions were in `sboot` - and it's why this one unlocks and runs a GSI where the phone couldn't.
+the short of it: on this tablet the decisions that matter sit in the **secure world**, not in the bootloader you can read. a little-kernel TEE (Trusty) judges the unlock token and runs the vbmeta check that sets the boot state, and the bootloader goes by its answers. the A10e kept those same decisions in `sboot`, the part you can read. (why each tablet ended where it did is its own story - the A10e stayed on stock because OEM unlocking wasn't allowed on that unit, and its GSI wall was the Treble level; the [comparison](A8-vs-A10e.md) has both.)
 
 new to this? [the plain version](Tab-A8-teardown.md#the-plain-version) is six short points with no addresses.
 
@@ -32,6 +32,7 @@ there's also a [how-to](docs/lineageos-howto.md) for putting LineageOS on the ta
 | [`docs/partition-map.md`](docs/partition-map.md) | all 58 partitions from the PIT |
 | [`docs/lineageos-howto.md`](docs/lineageos-howto.md) | the LineageOS how-to - what was done on two tablets, and what wasn't tested |
 | [`docs/how-the-code-was-read.md`](docs/how-the-code-was-read.md) | the REA + Ghidra tools that read the bootloader and secure world, and what each is for |
+| [`docs/what-it-took.md`](docs/what-it-took.md) | tool calls, tokens and an API-price cost estimate for building the repo |
 | `figures/` | pictures - the charts are made by scripts in `tools/`, the diagrams are screenshots of the archify pages |
 | `.archify/workflow-tab-a8-flash-20261120-144800/` | the whole flash as one flow diagram - standalone HTML + its source |
 | `.archify/tree-tab-a8-vbmeta-20261120-145200/` | what vbmeta covers, as a tree - standalone HTML + its source |
@@ -39,7 +40,9 @@ there's also a [how-to](docs/lineageos-howto.md) for putting LineageOS on the ta
 | `.archify/workflow-tab-a8-boot-chain-20261120-154500/` | the boot chain, who checks whom - standalone HTML + its source |
 | `.archify/arch-tab-a8-secure-world-20261120-162600/` | the secure world and the fence around it - standalone HTML + its source |
 | `.archify/arch-tab-a8-vs-a10e-20261120-163500/` | the two devices side by side - standalone HTML + its source |
-| [`tools/`](tools/README.md) | ten small scripts |
+| `.archify/workflow-tab-a8-power-on-20261120-172500/` | what happens when you press power - standalone HTML + its source |
+| `.archify/workflow-tab-a8-unlock-20261120-173000/` | the unlock, step by step - standalone HTML + its source |
+| [`tools/`](tools/README.md) | eleven small scripts |
 | [`ROADMAP.md`](ROADMAP.md) | the phases, and what's still open |
 
 ## get the files
@@ -60,7 +63,7 @@ got a question, or spotted something wrong? open an issue: [github.com/CassieFox
 
 ## contributing
 
-this is a personal project. issues are welcome; pull requests aren't expected.
+this is a personal project. issues are welcome, pull requests aren't expected - see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## license
 

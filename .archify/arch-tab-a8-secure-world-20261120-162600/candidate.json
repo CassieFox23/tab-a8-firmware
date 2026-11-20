@@ -56,7 +56,7 @@
       "id": "huk",
       "type": "database",
       "label": "Hardware key (HUK)",
-      "sublabel": "never leaves the TEE",
+      "sublabel": "stays in the TEE, by its label",
       "pos": [
         980,
         114
@@ -242,7 +242,7 @@
       "dot": "amber",
       "title": "The two commands lk sends",
       "items": [
-        "0x33 \u2014 unlock token: AES-CBC(HUK-derived key, 'VerifiedBoot-UNLOCK'), so it is device-bound and can't be forged in miscdata",
+        "0x33 \u2014 unlock token: AES-CBC(HUK-derived key, 'VerifiedBoot-UNLOCK'), tied to the chip if the HUK-DERIVE label holds, and not forgeable in miscdata",
         "0x20 \u2014 vbmeta: libavb avb_slot_verify runs inside the TEE"
       ]
     },

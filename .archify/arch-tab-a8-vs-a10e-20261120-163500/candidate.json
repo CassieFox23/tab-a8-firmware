@@ -29,7 +29,7 @@
   "cards": [
     { "dot": "slate", "title": "the same four questions", "items": ["what does the bootloader check before it boots something", "where does the unlock state live", "what is the secure world, and what keeps apps out", "does a current GSI fit"] },
     { "dot": "rose", "title": "where the decisions sit", "items": ["A10e: in the bootloader you can read", "Tab A8: pushed into the secure world - Trusty judges the unlock token (cmd 0x33) and the vbmeta check that sets the boot state (cmd 0x20)", "lk runs its own libavb too, but that feeds the kernel cmdline, not the boot-state gate"] },
-    { "dot": "amber", "title": "unlock", "items": ["A10e: state read in the bootloader; OEM unlock refused on that unit", "Tab A8: a device-bound token in miscdata that Trusty judges; unlocked from Download Mode, flash.locked read back 0"] },
+    { "dot": "amber", "title": "unlock", "items": ["A10e: state read in the bootloader; OEM unlock refused on that unit", "Tab A8: a token in miscdata that Trusty judges (chip-bound if its key label holds); unlocked from Download Mode, flash.locked read back 0"] },
     { "dot": "violet", "title": "the secure world and its fence", "items": ["A10e: TEEGRIS; TrustZone nodes 0666, SELinux the only fence", "Tab A8: Trusty; TEE node 0660 plus SELinux; apps reach only the media HALs, never the key ones"] },
     { "dot": "emerald", "title": "why a GSI fits the tablet", "items": ["A10e: vendor Treble level 3, below what the GSI ships", "Tab A8: level 5, VNDK 30, kernel 4.14.199 - matches the LineageOS 22.2 GSI"] }
   ]

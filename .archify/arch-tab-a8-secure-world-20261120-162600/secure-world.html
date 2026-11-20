@@ -5322,8 +5322,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <text data-detail="fine" x="810" y="174" class="t-security" font-size="7" text-anchor="middle">sprdsec SIP handler</text>
         </g>
 
-        <g id="node-huk" data-node-id="huk" data-node-label="Hardware key (HUK)" tabindex="0" role="button" aria-label="Focus Hardware key (HUK), never leaves the TEE, Secure side — EL3 monitor + Trusty (sml, tos)" aria-pressed="false" data-node-kind="database" data-node-sublabel="never leaves the TEE" data-node-context="Secure side — EL3 monitor + Trusty (sml, tos)">
-          <title>Hardware key (HUK) · never leaves the TEE · Secure side — EL3 monitor + Trusty (sml, tos)</title>
+        <g id="node-huk" data-node-id="huk" data-node-label="Hardware key (HUK)" tabindex="0" role="button" aria-label="Focus Hardware key (HUK), stays in the TEE, by its label, Secure side — EL3 monitor + Trusty (sml, tos)" aria-pressed="false" data-node-kind="database" data-node-sublabel="stays in the TEE, by its label" data-node-context="Secure side — EL3 monitor + Trusty (sml, tos)">
+          <title>Hardware key (HUK) · stays in the TEE, by its label · Secure side — EL3 monitor + Trusty (sml, tos)</title>
           <rect x="980" y="114" width="160" height="64" rx="8" class="c-mask"/>
           <rect x="980" y="114" width="160" height="64" rx="8" class="c-database" data-animate="node" style="--step:3" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(986 120) scale(0.6875)">
@@ -5331,7 +5331,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
             <path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/>
           </g>
           <text data-node-label="" data-detail-anchor="" x="1060" y="144" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Hardware key (HUK)</text>
-        <text data-detail="context" x="1060" y="160" class="t-muted" font-size="9" text-anchor="middle">never leaves the TEE</text>
+        <text data-detail="context" x="1060" y="160" class="t-muted" font-size="8.4" text-anchor="middle">stays in the TEE, by its label</text>
         </g>
 
         <g id="node-apps" data-node-id="apps" data-node-label="Android apps" tabindex="0" role="button" aria-label="Focus Android apps, untrusted_app, Architecture component" aria-pressed="false" data-node-kind="external" data-node-sublabel="untrusted_app" data-node-context="Architecture component">
@@ -5651,7 +5651,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           <h3>The two commands lk sends</h3>
         </div>
         <ul>
-          <li>0x33 — unlock token: AES-CBC(HUK-derived key, &#39;VerifiedBoot-UNLOCK&#39;), so it is device-bound and can&#39;t be forged in miscdata</li>
+          <li>0x33 — unlock token: AES-CBC(HUK-derived key, &#39;VerifiedBoot-UNLOCK&#39;), tied to the chip if the HUK-DERIVE label holds, and not forgeable in miscdata</li>
           <li>0x20 — vbmeta: libavb avb_slot_verify runs inside the TEE</li>
         </ul>
       </div>
