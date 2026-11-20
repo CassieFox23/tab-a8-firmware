@@ -1,8 +1,8 @@
 # Tab A8 teardown
 
-**in progress.** the first pass is in - the things you can read straight off the stock firmware without a disassembler. sections still marked *not read yet* are just the questions, the same kind the [A10e teardown](https://github.com/CassieFox23/a10e-firmware/blob/master/A10e-teardown.md) answered for the phone.
+**in progress.** the first pass is in - the things you can read straight off the stock firmware without a disassembler - and so is a first read of the bootloader's first two stages with one. sections still marked *not read yet* are just the questions, the same kind the [A10e teardown](https://github.com/CassieFox23/a10e-firmware/blob/master/A10e-teardown.md) answered for the phone.
 
-everything here is static - files unpacked and read on a PC. nothing was run and nothing touched the tablet.
+the read is static - files unpacked and read on a PC, with none of the firmware's code run. where something was seen on the real tablets it says so, and it comes from the flash logs behind the [how-to](docs/lineageos-howto.md).
 
 ## the device
 
@@ -76,7 +76,7 @@ lpunpack -p vendor -p system super.raw .    # gives the vendor.img and system.im
 
 ## the boot chain
 
-the BL bundle has seven files. this is a sizing pass over all of them - headers, hashes, signatures, entropy and strings. **nothing was disassembled.** it still settled more than expected, because the files check each other with plain hashes.
+the BL bundle has seven files. first comes a sizing pass over all of them - headers, hashes, signatures, entropy and strings, with nothing disassembled. it settled more than expected, because the files check each other with plain hashes. the read of the code in `lk` and the SPL starts at [pinning the load addresses](#pinning-the-load-addresses).
 
 ![the signing chain: key A signs the SPL, whose certificate names key B; key B signs sml, tos, teecfg and lk; lk's certificate names the AVB key, which signs vbmeta.img](figures/signing-chain.png)
 
@@ -191,7 +191,7 @@ both files are raw code with no load address in the header, so that came first. 
 | `lk` body | 1856 at `0x9f000000`, runner-up 997 | `0x000` (4812 hits, next best 1719) | **`0x9f000000`** |
 | SPL body | 11 at `0x5700`, runner-up 6 | `0x700` (29 hits, next best 11) | **`0x5700`** |
 
-the SPL's is thin on its own - it only has 83 strings - but the two methods agree, and the SPL's own code settles `lk`'s: it loads the `uboot` partition to `0x9f000000` with the 512-byte header just below at `0x9efffe00`.
+the SPL's is thin on its own - it only has 83 strings by this script's count (6 characters or more, ending in a zero byte - the sizing table's 66 counts 8 or more) - but the two methods agree, and the SPL's own code settles `lk`'s: it loads the `uboot` partition to `0x9f000000` with the 512-byte header just below at `0x9efffe00`.
 
 the SPL's phase is `0x700`, not `0`. that's the same trap as the A10e, where assuming phase 0 quietly pointed every reference at the wrong string.
 
@@ -229,9 +229,11 @@ so the SPL carries the expected key hash in its own signed image and checks the 
 - one global, at `0x9f4388a8`, holds "unlocked". exactly one function writes it: `0x9f121324`
 - that function reads 512 bytes from the `miscdata` partition at offset `0x2000` and hands the first 64 to `0x9f0108e8`
 - `0x9f0108e8` copies them into a page-aligned buffer and sends **command `0x33`** to the secure world. it counts as unlocked only if the call returns `0` and a byte in the reply is set
-- so `lk` doesn't decide by itself whether the tablet is unlocked. it asks Trusty, every time it needs to know
+- so `lk` doesn't decide by itself whether the tablet is unlocked. it asks the secure world and keeps the answer in that global. how often `0x9f121324` runs wasn't read
 
 the call itself: 27 small wrappers each load a command number (`0x1` to `0x50`) and call a dispatcher at `0x9f14325c`, which calls `0x9f147000`, where the `smc` instruction is (`0x9f147018`).
+
+"the secure world" in this section means whatever answers that `smc`. the read of `lk` stops at the instruction - what sits on the other side belongs to [the secure world](#the-secure-world).
 
 that global then drives the kernel command line: `0x9f007b2c` appends `androidboot.flash.locked=0` when it's `1`, and `=1` otherwise.
 
@@ -258,7 +260,7 @@ the KG state names come from a table at `0x9f1c0b10`:
 
 this fits what the real tablets did: their Download Mode screen read `KG STATE` completed, and they unlocked.
 
-**Knox Guard also gates flashing.** in the flash handler at `0x9f017010`, the code just before the message `All binaries are not allowed to be flashed due to KG locked.` is: KG state equals `3` (`LOCKED`), and a second function (`0x9f037540`, not read) returns `0`. this one is from decoding the branches, not from the decompiler.
+**Knox Guard also gates flashing.** in the flash handler at `0x9f017010`, the code just before the message `All binaries are not allowed to be flashed due to KG locked.` is: KG state equals `3` (`LOCKED`), and a second function (`0x9f037540`, not read) returns `0`. this one is from decoding the branches, not from the decompiler. the same message is used a second time, at `0x9f01845c` in a function starting `0x9f0179a0`, which wasn't read.
 
 **the Download Mode screen** is printed by `0x9f0364fc`: `ODIN MODE`, `PRODUCT NAME`, `CURRENT BINARY` (Samsung Official or Custom), `FRP LOCK`, `OEM LOCK`, `KG STATUS`, `UNISOC SECURE BOOT`, `WARRANTY VOID`, `RP SWREV`, `SECURE DOWNLOAD` and `GRDM STATUS`. its `OEM LOCK` line comes from the same `miscdata` check and the same switch byte.
 
@@ -268,18 +270,19 @@ this fits what the real tablets did: their Download Mode screen read `KG STATE` 
 
 1. reads the last 64 bytes of the partition - the AVB footer - and checks it
 2. loads the vbmeta blob the footer points at
-3. sends it to the secure world with **command `0x20`**. so the signature check on vbmeta is done by Trusty, not by `lk`
+3. sends it to the secure world with **command `0x20`**. `lk` also has its own libavb built in (`platform/common/secureboot/avb/libavb/avb_slot_verify.c`), and code points at it: `0x9f129558`, and `0x9f1281e4`, which logs `avb_vbmeta_image_verify() return %d`. that code wasn't read, so what `lk` checks for itself around this call isn't known
 4. sets a boot-state global (`0x9f435010`) from the answer:
    - **if the tablet is unlocked, the state is `2`, whatever the check said**
    - locked and the check returned `0`: state `0`
    - locked and anything else: state `3`
 
-that first branch is the code behind what the real tablets showed - a system image that isn't Samsung's boots, and the tablet reports `orange`. state `0` and state `3` are most likely `green` and `red`, since those are the other strings next to `orange`, but the function that turns the number into the string wasn't read.
+that first branch is the code behind what the real tablets showed - a system image that isn't Samsung's boots, and the tablet reports `orange`. state `0` and state `3` are most likely `green` and `red`, but that's a guess: there are four strings (`green`, `yellow`, `orange`, `red`) and which number gives which wasn't read. `tools/a64_refs.py` puts the code that uses the `yellow` and `red` strings (`0x9f007b00`, `0x9f007b0c`) in a function starting `0x9f007a3c`, just ahead of the `flash.locked` code at `0x9f007b2c`.
 
 *not read:*
 
 - what `lk` does next when a **locked** tablet lands in state `3`
 - what Trusty does with commands `0x20` and `0x33` - that's the secure world's side
+- `lk`'s own libavb code (`0x9f129558`, `0x9f1281e4`), and how it fits with command `0x20`
 - who writes the `miscdata` record when you unlock, and what's in its 64 bytes
 - the two helper checks, `0x9f038880` and `0x9f037540`
 - the warranty bit
@@ -290,14 +293,14 @@ that first branch is the code behind what the real tablets showed - a system ima
 |---|---|---|
 | shape | one 4 MiB image with an encrypted stage at the front | separate files per stage, none of the signed ones encrypted |
 | finding the load address | one address, and the page phase was the trap | two addresses, same trap in the SPL (phase `0x700`) |
-| who checks the vbmeta key | the bootloader itself, calling libavb | the bootloader hands vbmeta to the secure world |
+| who checks the vbmeta key | the bootloader itself, calling libavb | the bootloader hands vbmeta to the secure world. its own libavb code wasn't read |
 | who holds the unlock state | read inside the bootloader | a record in `miscdata` that the secure world judges |
 | Knox Guard | gates flashing in Download Mode | gates flashing, and gates unlocking too |
 | can it unlock | no, on that unit | yes |
 
 the A10e column is from its [teardown](https://github.com/CassieFox23/a10e-firmware/blob/master/A10e-teardown.md).
 
-the big difference is where the decisions sit. on the A10e they're in the bootloader you can read. here the bootloader asks Trusty for both of them, so the last word is in `tos-sign.bin` - which is the next thing to read.
+the big difference is where the decisions sit. on the A10e they're in the bootloader you can read. here the bootloader asks the secure world about both. for the unlock state, that answer is the one `lk` goes by. for vbmeta, what `lk`'s own libavb adds on top wasn't read. what's behind the `smc` belongs to [the secure world](#the-secure-world).
 
 one thing the firmware does say: the vendor's `default.prop` has `ro.oem_unlock_supported=1`. the A10e had that same line and still wouldn't unlock, so on its own it settles nothing.
 

@@ -37,7 +37,7 @@ there's also a [how-to](docs/lineageos-howto.md) for putting LineageOS on the ta
 
 ## get the files
 
-no firmware is in here and none will be - the stock bundles are big. which build it is and how to fetch your own goes here once the read starts.
+no firmware is in here and none will be - the stock bundles are big. the build read is `X200XXS6DYG6` (CSC `X200XAR6DYG6`), and how to fetch your own is [step 2 of the how-to](docs/lineageos-howto.md#2-get-the-stock-firmware-and-pull-out-its-recovery).
 
 ## samsung
 
