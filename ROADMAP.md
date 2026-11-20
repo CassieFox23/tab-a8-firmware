@@ -79,6 +79,6 @@ finish line: the secure world row of the comparison is filled.
 
 ## phase 7 - review, then public
 
-- [ ] a blind read of the whole thing by a reviewer who wasn't in the room
-- [ ] fixes from that read
+- [x] a blind read of the whole thing by a reviewer who wasn't in the room - two of them: one on the whole repo, one on the fixes and the new diagrams
+- [x] fixes from that read
 - [ ] repo goes public, Discussions on, the how-to gets its thread
