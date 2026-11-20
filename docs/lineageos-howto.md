@@ -20,7 +20,7 @@ the order of the flash itself (TWRP, format data, fastbootd, system, then stock 
 | `adb` and `fastboot` | android-tools 37.0.0 | the distro's package |
 | a Samsung flasher | [samloader-rs](https://github.com/topjohnwu/samloader-rs) 2.2.0 (Apache-2.0) | its [GitHub release](https://github.com/topjohnwu/samloader-rs/releases/tag/2.2.0) |
 | the stock firmware for *your* build | `X200XXS6DYG6`, region XAR | Samsung's servers, through samloader-rs |
-| a TWRP recovery for the SM-X200 | 3.7.1_12, as `twrp.tar` | an XDA thread (`xdaforums.com/t/4763633/`) |
+| a TWRP recovery for the SM-X200 | `3.7.1_12-support x200-205 stable A14` (the version string inside the image), as `twrp.tar` | an XDA thread (`xdaforums.com/t/4763633/`) |
 | the GSI | `LineageOS-22.2-20260105-VANILLA-EXT4-GSI` (Android 15) | MisterZtr's [SourceForge builds](https://sourceforge.net/projects/misterztr-gsi/files/LineageOS/) |
 
 [Heimdall](https://git.sr.ht/~grimler/Heimdall) 2.2.2 was also used once, only to read the partition table. you can skip it.
@@ -195,7 +195,7 @@ fastboot reboot
 
 - the system image goes over in 10 sparse chunks and took about 99 seconds both times (`Finished. Total time: 99.590s` and `98.523s`).
 - the second line puts the **stock** recovery back over TWRP. don't skip it - the notes this route comes from say the tablet won't boot the GSI with TWRP still there. that claim wasn't tested here, the stock recovery just went back both times.
-- **no vbmeta image was flashed**, and nothing about verified boot was disabled. the stock `vbmeta` stayed where it was.
+- **no vbmeta image was flashed**, and nothing about verified boot was disabled. those three commands are all that got written in fastbootd.
 
 ## 10. first boot
 
@@ -211,7 +211,7 @@ adb shell 'getprop ro.lineage.version; getprop ro.build.version.release; uname -
 4.14.199-29056031-abX200XXS6DYG6
 ```
 
-so it's Android 15 on top of the stock kernel and the stock vendor partition.
+so it's Android 15 on top of the stock kernel. the vendor partition is the stock one too, going by what was flashed - only `system` and `recovery` were written.
 
 ## after it boots
 

@@ -98,7 +98,7 @@ what `vbmeta.img` says, read with `avbtool info_image --image vbmeta.img`:
 
 that key isn't the A10e's (`e553992a79ab561a4805371cce123d1ee73db21b`).
 
-one thing seen on the real tablets, from the flash logs in the [how-to](docs/lineageos-howto.md): with the bootloader unlocked, a `system` image that isn't Samsung's booted with the stock `vbmeta` left exactly as it was. no vbmeta was flashed and nothing was disabled. afterwards the tablet reported `ro.boot.verifiedbootstate` as `orange`. so once it's unlocked, the hashtree for `system` in vbmeta doesn't stop a different system from starting. that's what happened, not a read of the code that decides it.
+one thing seen on the real tablets, from the flash logs in the [how-to](docs/lineageos-howto.md): with the bootloader unlocked, a `system` image that isn't Samsung's booted, and no command in the logs ever wrote to `vbmeta` or turned verification off. after the unlock the tablet reported `ro.boot.verifiedbootstate` as `orange`. so once it's unlocked, the hashtree for `system` in vbmeta didn't stop a different system from starting. that's what happened, not a read of the code that decides it - and the `vbmeta` partition wasn't read back off the tablet to prove it's still the stock one.
 
 *not read yet:*
 

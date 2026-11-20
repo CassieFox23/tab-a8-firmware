@@ -1,0 +1,81 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "LineageOS onto a Galaxy Tab A8 (SM-X200), as it was done",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "output": ".archify/workflow-tab-a8-flash-20261120-144800/tab-a8-flash.html",
+    "legend": {
+      "entries": {
+        "frontend": { "label": "by hand on the tablet" },
+        "backend": { "label": "command on the PC" },
+        "security": { "label": "wipes the tablet" },
+        "database": { "label": "checked result" },
+        "external": { "label": "not tested" }
+      }
+    }
+  },
+  "lanes": [
+    { "id": "tablet", "label": "On the tablet, by hand" },
+    { "id": "pc", "label": "On the PC" },
+    { "id": "back", "label": "The way back to stock", "variant": "exception" }
+  ],
+  "phases": [
+    { "id": "prep", "label": "Before the unlock", "fromCol": 0, "toCol": 1 },
+    { "id": "unlock", "label": "Unlock", "fromCol": 2, "toCol": 2, "variant": "security" },
+    { "id": "flash", "label": "Flash", "fromCol": 3, "toCol": 5, "variant": "emphasis" }
+  ],
+  "mainPath": ["oem", "firmware", "download", "writetest", "longpress", "readback", "twrp", "boottwrp", "format", "system", "recovery", "boots"],
+  "nodes": [
+    { "id": "oem", "lane": "tablet", "col": 0, "type": "frontend", "label": "OEM unlocking on", "sublabel": "Developer options" },
+    { "id": "download", "lane": "tablet", "col": 1, "type": "frontend", "label": "Download Mode", "sublabel": "both volume keys + cable" },
+    { "id": "longpress", "lane": "tablet", "col": 2, "type": "security", "label": "Long-press Volume Up", "sublabel": "unlocks the bootloader", "tag": "wipes everything" },
+    { "id": "boottwrp", "lane": "tablet", "col": 3, "type": "frontend", "label": "Boot into TWRP", "sublabel": "Power + Volume Up" },
+    { "id": "format", "lane": "tablet", "col": 4, "type": "security", "label": "Format Data", "sublabel": "then Reboot > Fastboot", "tag": "followed, not checked" },
+    { "id": "boots", "lane": "tablet", "col": 5, "type": "database", "label": "LineageOS 22.2 boots", "sublabel": "Android 15, stock kernel" },
+
+    { "id": "firmware", "lane": "pc", "col": 0, "type": "backend", "label": "Get stock firmware", "sublabel": "keep its recovery.img" },
+    { "id": "writetest", "lane": "pc", "col": 1, "type": "backend", "label": "Write test", "sublabel": "stock recovery, -p 38", "tag": "still locked" },
+    { "id": "readback", "lane": "pc", "col": 2, "type": "database", "label": "flash.locked = 0", "sublabel": "boot state orange" },
+    { "id": "twrp", "lane": "pc", "col": 3, "type": "backend", "label": "Flash TWRP", "sublabel": "-p 38 --no-reboot" },
+    { "id": "system", "lane": "pc", "col": 4, "type": "backend", "label": "fastboot flash system", "sublabel": "the GSI, about 99 s" },
+    { "id": "recovery", "lane": "pc", "col": 5, "type": "backend", "label": "fastboot flash recovery", "sublabel": "stock again, then reboot", "tag": "no vbmeta flashed" },
+
+    { "id": "menu", "lane": "back", "col": 1, "type": "database", "label": "Stock recovery menu", "sublabel": "shows, tablet boots" },
+    { "id": "restore", "lane": "back", "col": 5, "type": "external", "label": "Full stock restore", "sublabel": "never run" }
+  ],
+  "edges": [
+    { "id": "e-oem-fw", "from": "oem", "to": "firmware" },
+    { "id": "e-fw-dl", "from": "firmware", "to": "download" },
+    { "id": "e-dl-test", "from": "download", "to": "writetest", "label": "short press", "variant": "emphasis" },
+    { "id": "e-test-menu", "from": "writetest", "to": "menu", "label": "proves a write", "variant": "dashed", "role": "branch" },
+    { "id": "e-test-unlock", "from": "writetest", "to": "longpress", "variant": "security" },
+    { "id": "e-unlock-read", "from": "longpress", "to": "readback", "label": "after setup" },
+    { "id": "e-read-twrp", "from": "readback", "to": "twrp", "variant": "emphasis" },
+    { "id": "e-twrp-boot", "from": "twrp", "to": "boottwrp" },
+    { "id": "e-boot-format", "from": "boottwrp", "to": "format" },
+    { "id": "e-format-system", "from": "format", "to": "system", "label": "fastbootd", "variant": "emphasis" },
+    { "id": "e-system-recovery", "from": "system", "to": "recovery" },
+    { "id": "e-recovery-boots", "from": "recovery", "to": "boots", "variant": "emphasis" },
+    { "id": "e-recovery-restore", "from": "recovery", "to": "restore", "label": "to undo it all", "variant": "dashed", "role": "branch" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What the PC ran",
+      "items": [
+        "samloader-rs 2.2.0 for Download Mode writes, by partition number",
+        "fastboot from fastbootd for the GSI and the stock recovery"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "What is not shown to work",
+      "items": [
+        "Putting the whole stock firmware back, or relocking",
+        "Any build other than X200XXS6DYG6, region XAR"
+      ]
+    }
+  ]
+}

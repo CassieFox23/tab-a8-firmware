@@ -1,1 +1,5 @@
 /out/
+/.archify/*/visual-check/
+/.archify/*/review-*/
+/.archify/*/*.out
+/.archify/*/*.*.json
