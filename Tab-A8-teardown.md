@@ -280,7 +280,7 @@ that first branch is the code behind what the real tablets showed - a system ima
 
 **`lk` also checks vbmeta itself.** next to command `0x20` there's a whole libavb inside `lk`, and it's wired up:
 
-- `0x9f11f9a0` calls `0x9f124e64`, which logs `avb check image name` and calls `avb_slot_verify` (`0x9f129684`)
+- `0x9f121540` calls `0x9f11f9a0` (at `0x9f1215d0`), which calls `0x9f124e64`, which logs `avb check image name` and calls `avb_slot_verify` (`0x9f129684`)
 - that calls `load_and_verify_vbmeta` (`0x9f1281e0`), which reads the `vbmeta` partition and calls `avb_vbmeta_image_verify` (`0x9f12a868`)
 - `0x9f12a868` calls SHA-256 and SHA-512 routines and an RSA check at `0x9f126f18` (`Signature length does not match key length.`). so vbmeta's hash and signature are checked by `lk`'s own code
 - whether that key is one to trust is then asked through a function pointer - slot `+0x30` of a table at `0x9f9ae060`. the table sits past the end of the file, so it's filled in while `lk` runs, and what's behind the slot wasn't read
@@ -290,9 +290,9 @@ the names are libavb's own, taken from each function's log strings. Ghidra start
 
 **command `0x20` has four callers, not one.** `0x9f1206d0` above is the only one read through. the others, by their log strings: `0x9f1208b0` (the Cortex-M4 image - `cm4 old img_addr`), `0x9f120b00` (`boot`, `recovery`, `vbmeta_system` and the other vbmeta names, with `Device Status is unlock, skip %s image verify!`) and `0x9f123d88` (`check vbmeta image.`).
 
-and nothing was found calling `0x9f1206d0` itself: Ghidra lists no caller, no `bl` or `b` in the code lands on it, and its address isn't stored anywhere in the file. so whether it runs, and how it's reached, isn't known - which matters, because the boot-state logic above is that function's.
+and nothing was found calling `0x9f1206d0` itself: Ghidra lists no caller, no `bl` or `b` in the code lands on it, no `ADRP`+`ADD` builds its address, and its address isn't stored anywhere in the file. so whether it runs, and how it's reached, isn't known - which matters, because the boot-state logic above is that function's.
 
-so both things are in this bootloader: `lk` verifies vbmeta's signature with its own libavb, and it sends images to the secure world with command `0x20`. the order they run in, and which result the boot state hangs on, wasn't read.
+so both things are in this bootloader: `lk` verifies vbmeta's signature with its own libavb, and it sends images to the secure world with command `0x20`. one function holds both: `0x9f121540` calls the libavb chain at `0x9f1215d0` and the `0x20` caller `0x9f120b00` further down, at `0x9f121934`. what it does between the two, and which result the boot state hangs on, wasn't read.
 
 ```
 python3 tools/a64_refs.py lk.body 0x9f000000 "avb check image name" "avb_vbmeta_image_verify() return" \
@@ -418,7 +418,7 @@ the TOS body splits like `lk` did: the Trusty kernel is the first ~752 KiB (AArc
 `lk` reaches the secure world with an `smc #0` whose function id is `0xb4000020` and whose second argument word is the command (phase 4's "command `0x33`/`0x20`"). in the TOS, one handler takes those - `sprdsec`'s `process_sip_call` at `0xffffffffe004256c` - and switches on that command word. it checks the id is `0xb4000020` first, then:
 
 - **command `0x33` - the unlock record (`FUNCTYPE_CHECK_LOCK_STATUS`).** it maps the 64-byte record `lk` read out of `miscdata`, computes its own expected 64 bytes, compares the two, and writes `1` into the buffer at offset `0x40` on a match (`unlock status is matched, return unlock.`) or `0` on a miss. the expected bytes come from `0xffffffffe0041d74`: derive a key from the chip's hardware key with the label `VerifiedBoot-HUK-DERIVE`, then AES-CBC the label `VerifiedBoot-UNLOCK` under it. so the unlock record isn't a flag `lk` trusts - it's a token only the secure world can compute, and only on this one chip, because the hardware key never leaves Trusty. planting bytes in `miscdata` can't forge it, and a token from one tablet won't verify on another.
-- **command `0x20` - vbmeta (`avb_slot_verify`).** the handler at `0xffffffffe0072a5c` runs libavb inside the TEE: its callees are the AVB slot-verify path (`### enter avb_slot_verify. ###`, `avb_slot_verify result is %d`, `external/lk/platform/sprd/secureboot/sprd/avb/tos_avb_api.c`). so the vbmeta check phase 4 saw `lk` hand to the secure world really does run there, as a full `avb_slot_verify`, and the result comes back. this is the secure world's half, not proof `lk` trusts only it: `lk`'s own libavb is still unread (the boot-chain section above - four callers of the `0x20` wrapper, and `avb_vbmeta_image_verify` code), so whether `lk` also checks vbmeta for itself isn't read.
+- **command `0x20` - vbmeta (`avb_slot_verify`).** the handler at `0xffffffffe0072a5c` runs libavb inside the TEE: its callees are the AVB slot-verify path (`### enter avb_slot_verify. ###`, `avb_slot_verify result is %d`, `external/lk/platform/sprd/secureboot/sprd/avb/tos_avb_api.c`). so the vbmeta check phase 4 saw `lk` hand to the secure world really does run there, as a full `avb_slot_verify`, and the result comes back. this is the secure world's half, not proof `lk` trusts only it: `lk` checks vbmeta's signature with its own libavb as well (see [what lk does about verified boot](#what-lk-does-about-verified-boot)), and which of the two results decides wasn't read.
 - the same switch carries the rest of the secure plumbing: `0x30`/`0x31` set binding data and run HUK-keyed crypto, `0x32` checks a password the same keyed way, `0x40` reads the chip uid, and a spread of `0x21`-`0x26` and `0x34`-`0x36` handlers for RPMB and efuse.
 
 ```
