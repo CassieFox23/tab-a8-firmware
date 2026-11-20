@@ -266,48 +266,43 @@ this fits what the real tablets did: their Download Mode screen read `KG STATE` 
 
 ### what lk does about verified boot
 
-`0x9f1206d0` takes a partition name and:
+the boot flow runs through `0x9f010c48` (it logs `SECUREBOOT ENABLE`): it picks `boot` or `recovery`, calls `0x9f120b00` on that name, then `0x9f121540`, sets the root of trust, and later checks `pm_sys` under a flag. those two calls are the two halves of verified boot - the secure-world check first, then `lk`'s own libavb.
 
-1. reads the last 64 bytes of the partition - the AVB footer - and checks it
-2. loads the vbmeta blob the footer points at
-3. sends it to the secure world with **command `0x20`**. that isn't the only check - `lk` has its own libavb too, read further down
-4. sets a boot-state global (`0x9f435010`) from the answer:
-   - **if the tablet is unlocked, the state is `2`, whatever the check said**
-   - locked and the check returned `0`: state `0`
-   - locked and anything else: state `3`
+**the boot-state decision: `0x9f120b00`.** given a partition name it:
 
-that first branch is the code behind what the real tablets showed - a system image that isn't Samsung's boots, and the tablet reports `orange`. state `0` and state `3` are most likely `green` and `red`, but that's a guess: there are four strings (`green`, `yellow`, `orange`, `red`) and which number gives which wasn't read. `tools/a64_refs.py` puts the code that uses the `yellow` and `red` strings (`0x9f007b00`, `0x9f007b0c`) in a function starting `0x9f007a3c`, just ahead of the `flash.locked` code at `0x9f007b2c`.
+1. loads the partition (`boot`/`recovery` to `0xb0000000`; the `vbmeta_*` names at size `0x1000`) and fills a request struct at `*0x9f9ab090`
+2. if the name is `boot` or `recovery` **and the tablet is unlocked** (`0x9f4388a8 == 1`), it logs `Device Status is unlock, skip %s image verify!` and **doesn't call the secure world at all**
+3. otherwise it sends the image to the secure world with **command `0x20`** (wrapper `0x9f142de4`, struct size `0x68`). if the wrapper's return doesn't match the code in the reply, it logs `tos return error!` and **sits in an endless loop**
+4. then it sets the boot-state global `0x9f435010` from the result: unlocked → `2`; result `0` → `0` (unless the state is already `3`); result `5` → `1`; anything else → `3`
 
-**`lk` also checks vbmeta itself.** next to command `0x20` there's a whole libavb inside `lk`, and it's wired up:
+so the state the tablet boots with is set by the **secure-world** check, and on an unlocked `boot`/`recovery` that check is skipped and the state is `2`. that's the orange the real tablets showed - a non-Samsung system booted and the state went orange. the four values (`0`, `1`, `2`, `3`) line up with the four strings `green`/`yellow`/`orange`/`red`, but which number is which wasn't read; `tools/a64_refs.py` puts the code using `yellow` and `red` (`0x9f007b00`, `0x9f007b0c`) in a function at `0x9f007a3c`, just ahead of the `flash.locked` code at `0x9f007b2c`.
 
-- `0x9f121540` calls `0x9f11f9a0` (at `0x9f1215d0`), which calls `0x9f124e64`, which logs `avb check image name` and calls `avb_slot_verify` (`0x9f129684`)
-- that calls `load_and_verify_vbmeta` (`0x9f1281e0`), which reads the `vbmeta` partition and calls `avb_vbmeta_image_verify` (`0x9f12a868`)
-- `0x9f12a868` calls SHA-256 and SHA-512 routines and an RSA check at `0x9f126f18` (`Signature length does not match key length.`). so vbmeta's hash and signature are checked by `lk`'s own code
-- whether that key is one to trust is then asked through a function pointer - slot `+0x30` of a table at `0x9f9ae060`. the table sits past the end of the file, so it's filled in while `lk` runs, and what's behind the slot wasn't read
-- `0x9f124e64` turns on "allow verification errors" when a flag at `0x9f9af000` is `0` and the unlock check (`0x9f121324`) says unlocked. it logs `avb allow verification error in UNLOCK status while normal booting`
+there's a near-twin, `0x9f1206d0`, with the same shape (footer, load vbmeta, command `0x20`, set `0x9f435010`) but a slightly different mapping (its locked-`5` goes to `3`, not `1`). nothing was found calling it - no `bl`/`b`, no `ADRP`+`ADD`, not stored as data - so it reads like a dead or alternate copy, and the live numbers above are `0x9f120b00`'s.
 
-the names are libavb's own, taken from each function's log strings. Ghidra starts two of them four bytes earlier than `tools/a64_refs.py` does (`0x9f1281e0` and `0x9f11f9a0` here, `0x9f1281e4` and `0x9f11f9a4` there).
+**`lk` also checks vbmeta itself, after that.** `0x9f121540` runs only when the tablet is **not** unlocked and the name isn't `recovery`: it calls `0x9f120b00("vbmeta_system")`, notes `vbmeta_vendor`, `odmko` and `socko` are skipped, and then always calls `0x9f11f9a0` - `lk`'s own libavb:
 
-**command `0x20` has four callers, not one.** `0x9f1206d0` above is the only one read through. the others, by their log strings: `0x9f1208b0` (the Cortex-M4 image - `cm4 old img_addr`), `0x9f120b00` (`boot`, `recovery`, `vbmeta_system` and the other vbmeta names, with `Device Status is unlock, skip %s image verify!`) and `0x9f123d88` (`check vbmeta image.`).
+- `0x9f11f9a0` → `0x9f124e64` (`avb check image name`) → `avb_slot_verify` (`0x9f129684`) → `load_and_verify_vbmeta` (`0x9f1281e0`) → `avb_vbmeta_image_verify` (`0x9f12a868`)
+- `0x9f12a868` calls SHA-256 and SHA-512 routines and an RSA check at `0x9f126f18` (`Signature length does not match key length.`), so vbmeta's hash and signature are checked by `lk`'s own code
+- whether that key is one to trust is asked through a function pointer - slot `+0x30` of a table at `0x9f9ae060`. the table sits past the end of the file, filled in while `lk` runs, so what's behind the slot wasn't read
+- `0x9f124e64` turns on "allow verification errors" when a flag at `0x9f9af000` is `0` and the unlock check (`0x9f121324`) says unlocked, logging `avb allow verification error in UNLOCK status while normal booting`
+- but `0x9f11f9a0` only logs `avb_check_image`'s return and builds the kernel cmdline from it; in what Ghidra shows that return isn't acted on (it flags a terminal call at `0x9f11fac8`, so the tail may be cut). so `lk`'s libavb feeds the cmdline and the root of trust, while the **boot-state gate is the secure-world `0x20` check above**
 
-and nothing was found calling `0x9f1206d0` itself: Ghidra lists no caller, no `bl` or `b` in the code lands on it, no `ADRP`+`ADD` builds its address, and its address isn't stored anywhere in the file. so whether it runs, and how it's reached, isn't known - which matters, because the boot-state logic above is that function's.
+the libavb names are its own, from each function's log strings. Ghidra starts two of them four bytes earlier than `tools/a64_refs.py` does (`0x9f1281e0`/`0x9f11f9a0` vs `0x9f1281e4`/`0x9f11f9a4`).
 
-so both things are in this bootloader: `lk` verifies vbmeta's signature with its own libavb, and it sends images to the secure world with command `0x20`. one function holds both: `0x9f121540` calls the libavb chain at `0x9f1215d0` and the `0x20` caller `0x9f120b00` further down, at `0x9f121934`. what it does between the two, and which result the boot state hangs on, wasn't read.
+**command `0x20` has four callers.** the live one is `0x9f120b00`. the others, by their strings: `0x9f1208b0` (the Cortex-M4 image, `cm4 old img_addr`), `0x9f123d88` (`check vbmeta image.`) and the unreached twin `0x9f1206d0`.
 
 ```
-python3 tools/a64_refs.py lk.body 0x9f000000 "avb check image name" "avb_vbmeta_image_verify() return" \
-    "Signature length does not match key length." "Device Status is unlock, skip" "check vbmeta image." \
-    "avb allow verification error in UNLOCK"
+python3 tools/a64_refs.py lk.body 0x9f000000 "SECUREBOOT ENABLE" "Device Status is unlock, skip" \
+    "avb check image name" "Signature length does not match key length." "check vbmeta image."
 ```
 
 *not read:*
 
-- what `lk` does next when a **locked** tablet lands in state `3`
-- what Trusty does with commands `0x20` and `0x33` - that's the secure world's side
-- what calls `0x9f1206d0`, and the other three callers of command `0x20` (`0x9f1208b0`, `0x9f120b00`, `0x9f123d88`)
-- what sits behind `lk`'s "is this key trusted" slot (`0x9f9ae060` + `0x30`), and the order `lk`'s libavb and command `0x20` run in
+- what reads the boot-state global `0x9f435010` downstream and halts or warns on `red`, and which number maps to which colour
+- what Trusty does with commands `0x20` and `0x33` - that's the secure world's side, [below](#the-secure-world)
+- what sits behind `lk`'s "is this key trusted" slot (`0x9f9ae060` + `0x30`)
 - who writes the `miscdata` record when you unlock, and what's in its 64 bytes
-- the two helper checks, `0x9f038880` and `0x9f037540`
+- the second flash-gate helper `0x9f038880` (the first, `0x9f037540`, is a bitmask test of a flags global at `0x9f45b290` - not a secure-world call)
 - the warranty bit
 
 ### against the A10e's sboot
@@ -316,14 +311,14 @@ python3 tools/a64_refs.py lk.body 0x9f000000 "avb check image name" "avb_vbmeta_
 |---|---|---|
 | shape | one 4 MiB image with an encrypted stage at the front | separate files per stage, none of the signed ones encrypted |
 | finding the load address | one address, and the page phase was the trap | two addresses, same trap in the SPL (phase `0x700`) |
-| who checks the vbmeta key | the bootloader itself, calling libavb | both: the bootloader checks vbmeta's signature with its own libavb, and it sends images to the secure world as well. which result decides wasn't read |
+| who checks the vbmeta key | the bootloader itself, calling libavb | both, and the secure world's answer sets the boot state: `lk` hands the image to the secure world (command `0x20`) and the state comes from that; its own libavb runs too, checking the signature and building the cmdline |
 | who holds the unlock state | read inside the bootloader | a record in `miscdata` that the secure world judges |
 | Knox Guard | gates flashing in Download Mode | gates flashing, and gates unlocking too |
 | can it unlock | no, on that unit | yes |
 
 the A10e column is from its [teardown](https://github.com/CassieFox23/a10e-firmware/blob/master/A10e-teardown.md).
 
-the big difference is where the decisions sit. on the A10e they're in the bootloader you can read. here the bootloader asks the secure world about both. for the unlock state, that answer is the one `lk` goes by. for vbmeta it does both - its own libavb checks the signature, and images go to the secure world too - and which result decides wasn't read. what's behind the `smc` belongs to [the secure world](#the-secure-world).
+the big difference is where the decisions sit. on the A10e they're in the bootloader you can read. here the bootloader asks the secure world about both: the unlock state, and the vbmeta check whose answer sets the boot state. `lk` runs its own libavb too, but that feeds the kernel cmdline and root of trust - the orange/green/red gate is the secure world's. what's behind the `smc` belongs to [the secure world](#the-secure-world).
 
 one thing the firmware does say: the vendor's `default.prop` has `ro.oem_unlock_supported=1`. the A10e had that same line and still wouldn't unlock, so on its own it settles nothing.
 
