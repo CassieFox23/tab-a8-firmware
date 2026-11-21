@@ -107,7 +107,7 @@ short meanings, as this page uses them.
 | DHTB | the four letters each signed bootloader file starts with, used here as the name of that container. the files don't say what they stand for |
 | secure world, TEE | a second small system on the same chip that the normal one can't see into. TEE is "trusted execution environment". this tablet's is Trusty |
 | TOS | the "trusted OS" file, `tos-sign.bin` - Trusty's kernel and its apps |
-| `sml`, BL31 | `sml-sign.bin` holds BL31, the piece of ARM Trusted Firmware that sits between the normal world and the secure one and passes calls across |
+| `sml`, BL31 | going by its strings, `sml-sign.bin` holds BL31 - the piece of ARM Trusted Firmware that normally sits between the normal world and the secure one and passes calls across. what it does on this tablet wasn't read |
 | `smc` | "secure monitor call", the ARM instruction normal-world code uses to call into the secure world |
 | AVB, vbmeta, libavb | Android Verified Boot. `vbmeta` is its signed table of hashes and keys, and libavb is Google's code that checks it |
 | chained partition | a partition that carries its own signed vbmeta footer. the main vbmeta only names the key that footer must be signed with |
@@ -200,7 +200,7 @@ the signature is RSASSA-PSS (SHA-256, 32-byte salt) over the bytes from the body
 - `lk`'s certificate is also type `1`, and the hash it carries is `a406eeb5ebc0...` - the SHA-256 of the AVB public key in `vbmeta.img`. so the **signed bootloader names the one vbmeta key it goes with**.
 - that AVB key then signs `vbmeta.img` and the chained partitions, as in the next section. the Cortex-M4 image is one of them: it has no DHTB wrapper, just an AVB footer for `pm_sys` signed by the same key.
 
-so the question the read started with - where does the bootloader keep the key it trusts - has a first answer without reading any code: the vbmeta key's hash rides in `lk`'s own signed certificate.
+so an early question - where does the bootloader keep the key it trusts - has a first answer without reading any code: the vbmeta key's hash rides in `lk`'s own signed certificate.
 
 the full key ids are SHA-256 values: key A `29f0d80a5959c8513e45c56596d3ff31d21713352706e0e1844fc8d2a17dfc29`, key B `3ca58836d04d90a9acff83ae763a085ca6c50d2444784042aa731e7b0eeaeffd`, AVB key blob `a406eeb5ebc07a5cafabdb1bf2f4ad74275a533f67cc68e680345d22ddc66cef`.
 
@@ -345,7 +345,7 @@ the number becomes a colour in `0x9f007a38`, which switches on the state and add
 | `3` | `androidboot.verifiedbootstate=red` |
 | `0`, or anything else | `androidboot.verifiedbootstate=green` |
 
-green is the fallback, so a state number the code doesn't know would also report green. (for four functions `tools/a64_refs.py` reports a start four bytes later than Ghidra does: this one as `0x9f007a3c`, and `0x9f1281e4`, `0x9f11f9a4` and `0x9f010990` for three further down. the addresses on this page are Ghidra's.)
+green is the fallback, so a state number the code doesn't know would also report green. (`tools/a64_refs.py` reports this function as starting at `0x9f007a3c`; Ghidra has `0x9f007a38`. the same four-byte gap shows on three functions further down - `0x9f1281e0`, `0x9f11f9a0` and `0x9f01098c` in Ghidra are `0x9f1281e4`, `0x9f11f9a4` and `0x9f010990` in the script - and for those four this page uses Ghidra's.)
 
 there's a near-twin, `0x9f1206d0`, with the same shape (footer, load vbmeta, command `0x20`, set `0x9f435010`) but a slightly different mapping (its locked-`5` goes to `3`, not `1`). nothing was found calling it - no `bl`/`b`, no `ADRP`+`ADD`, not stored as data - so it reads like a dead or alternate copy, and the live numbers above are `0x9f120b00`'s.
 
@@ -406,7 +406,7 @@ the other two were found by scanning for loads of `0x9f435010` and then decompil
 
 | | A10e `sboot` | Tab A8 |
 |---|---|---|
-| shape | one 4 MB image with an encrypted stage near the front | separate files per stage, none of the signed ones encrypted |
+| shape | one 4 MB image with an encrypted stage at the front | separate files per stage, none of the signed ones encrypted |
 | finding the load address | one address, and the page phase was the trap | two addresses, same trap in the SPL (phase `0x700`) |
 | who checks the vbmeta key | the bootloader itself, calling libavb | both, and the secure world's answer sets the boot state: `lk` hands the image to the secure world (command `0x20`) and the state comes from that; its own libavb runs too, checking the signature and building the cmdline |
 | who holds the unlock state | read inside the bootloader | a record in `miscdata` that the secure world judges |
