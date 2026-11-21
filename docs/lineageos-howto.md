@@ -1,6 +1,6 @@
 # LineageOS on the Tab A8 (SM-X200)
 
-how a [LineageOS](https://lineageos.org) GSI went onto two Galaxy Tab A8s from a Linux PC, written from the logs of doing it.
+how a [LineageOS](https://lineageos.org) GSI (a generic system image - one Android build made to run on many devices) went onto two Galaxy Tab A8s from a Linux PC, written from the logs of doing it.
 
 **read this bit first.**
 
@@ -26,7 +26,7 @@ the order of the flash itself (TWRP, format data, fastbootd, system, then stock 
 | `adb` and `fastboot` | android-tools 37.0.0 | the distro's package |
 | a Samsung flasher | [samloader-rs](https://github.com/topjohnwu/samloader-rs) 2.2.0 (Apache-2.0) | its [GitHub release](https://github.com/topjohnwu/samloader-rs/releases/tag/2.2.0) |
 | the stock firmware for *your* build | `X200XXS6DYG6`, region XAR | Samsung's servers, through samloader-rs |
-| a TWRP recovery for the SM-X200 | `3.7.1_12-support x200-205 stable A14` (the version string inside the image), as `twrp.tar` | an XDA thread, id 4763633 |
+| a TWRP recovery (a custom recovery with a touch menu) for the SM-X200 | `3.7.1_12-support x200-205 stable A14` (the version string inside the image), as `twrp.tar` | an XDA thread, id 4763633 |
 | the GSI | `LineageOS-22.2-20260105-VANILLA-EXT4-GSI` (Android 15) | MisterZtr's [SourceForge builds](https://sourceforge.net/projects/misterztr-gsi/files/LineageOS/) |
 
 [Heimdall](https://git.sr.ht/~grimler/Heimdall) 2.2.2 was also used once, only to read the partition table. you can skip it.
@@ -180,7 +180,7 @@ in TWRP:
 
 1. **Wipe** → **Format Data** → type `yes` *(followed, not checked on its own)*
 2. **Reboot** → **Recovery**, and let it come back into TWRP *(followed, not checked on its own)*
-3. **Reboot** → **Fastboot**
+3. **Reboot** → **Fastboot**. this is fastbootd, the fastboot that runs inside recovery - the one that can write to `system`, which lives inside `super`
 
 what was checked is where it ends up. on the PC:
 
