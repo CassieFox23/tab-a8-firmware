@@ -566,3 +566,30 @@ Samsung's published source for this build is the same `4.14.199` (its `Makefile`
 Kept on purpose, same as the A10e one.
 
 - **The md5 check that failed for the wrong reason.** The first try at checking the bundles cut the md5 line off at the last newline before it, and the BL and AP bundles came out as mismatches. The last bytes show why (`tail -c 176 <bundle> | xxd`): in the CSC bundle the hash follows a text line ending in a newline (`original_tar_file_size:67543040`), so that cut works. In the BL bundle zero bytes run right up to the hash with no newline, so the cut lands somewhere earlier. Cutting at the hash itself fixed it, and all four match. The AP bundle's tail wasn't looked at; it just passes the same fix. `tools/md5_check.py` does it the right way.
+
+## Sources and tools
+
+Everything outside this repo that the read leaned on, in one place.
+
+**Background reading**
+
+- [Android Verified Boot](https://source.android.com/docs/security/features/verifiedboot/avb) and the [libavb source](https://android.googlesource.com/platform/external/avb/), which is also where `avbtool` lives: what vbmeta, chained partitions and the boot colours mean
+- [Locking and unlocking the bootloader](https://source.android.com/docs/core/architecture/bootloader/locking_unlocking): what Android expects of the lock state
+- [VINTF match rules](https://source.android.com/docs/core/architecture/vintf/match-rules): the rule behind [why a GSI fits](#why-a-gsi-fits)
+- [Generic system images](https://source.android.com/docs/core/tests/vts/gsi): what a GSI is
+- [Trusty](https://source.android.com/docs/security/features/trusty), [little kernel](https://github.com/littlekernel/lk) and [Trusted Firmware-A](https://www.trustedfirmware.org/projects/tf-a/): the three open-source projects the strings in `tos`, `lk` and `sml` point at
+- [Samsung's open source release centre](https://opensource.samsung.com/): where the kernel source for this build comes from
+- The [A10e teardown](https://github.com/CassieFox23/a10e-firmware/blob/master/A10e-teardown.md): the phone's side of every comparison
+
+**Tools**
+
+- [REA](https://github.com/morluto/rea) driving [Ghidra](https://github.com/NationalSecurityAgency/ghidra): the decompiler reads of `lk`, the SPL and the Trusty kernel
+- `debugfs` from [e2fsprogs](https://github.com/tytso/e2fsprogs): reading files out of the vendor, system and GSI images without mounting them
+- `seinfo` and `sesearch` from [SETools](https://github.com/SELinuxProject/setools): the SELinux policy read
+- `lpdump` and `lpunpack` from Android's [partition tools](https://android.googlesource.com/platform/system/extras/+/refs/heads/main/partition_tools/), and `simg2img` from [libsparse](https://android.googlesource.com/platform/system/core/+/refs/heads/main/libsparse/): opening `super.img`
+- `unpack_bootimg` from Android's [mkbootimg](https://android.googlesource.com/platform/system/tools/mkbootimg/): opening `boot.img`
+- [binwalk](https://github.com/ReFirmLabs/binwalk): the CRC32, AES and SHA-256 tables inside `lk`
+- [samloader-rs](https://github.com/topjohnwu/samloader-rs): fetching the firmware and printing the PIT
+- The scripts in [`tools/`](tools/README.md): everything else
+
+The flash itself has its own sources, in the [how-to](docs/lineageos-howto.md).

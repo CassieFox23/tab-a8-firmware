@@ -28,11 +28,9 @@ New to this? [The plain version](Tab-A8-teardown.md#the-plain-version) is six sh
 
 ![The secure world and the fence around it: lk calls through sml into Trusty, with that hop and the hardware-key box marked as not read; on the Android side 23 domains can open the Trusty IPC node and no app domain is among them, and keys reach it only through keystore and the keymaster HAL](figures/secure-world.png)
 
-- **A current GSI fits because the vendor's Treble level is one the GSI still ships.** The A10e's wasn't.
+- **A current GSI fits because the vendor's Treble level is one the GSI still ships.** The A10e's wasn't. The two are side by side in [why a GSI fits](Tab-A8-teardown.md#why-a-gsi-fits).
 
-![Treble levels side by side: the A10e's vendor declares level 3 and its LineageOS 21 GSI ships levels 4 to 8, so nothing matches; the Tab A8's vendor declares level 5 and its LineageOS 22.2 GSI ships 5, 6, 7, 8 and 202404, so level 5 matches](figures/treble-fit.png)
-
-The full read, with addresses and the command behind each claim, is the [teardown](Tab-A8-teardown.md).
+The full read, with addresses and the command behind each claim, is the [teardown](Tab-A8-teardown.md). Its last section lists the [sources and tools](Tab-A8-teardown.md#sources-and-tools).
 
 ## What this is for
 
