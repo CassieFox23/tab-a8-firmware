@@ -50,21 +50,21 @@ If Chromium comes from the distro, prefix with `BLUEPRINT_CHROMIUM=/usr/bin/chro
 
 | Thing | Kit part | Why / caveat |
 |---|---|---|
-| The power key press | `box` "POWER ON" | no kit part for a key press; a plain labelled box |
-| SPL, sml, lk | `box` | named services in a chain |
-| The key fingerprint the SPL carries | `key` | the kit's secret/credential part; it is a fingerprint, not the key itself, so the label says KEY FINGERPRINT |
-| The four loaded pieces (teecfg, sml, trustos, lk) | one `queue` with 4 slots, filled one by one | a rack of slots; stands for "the four pieces", not a real queue. The same names also appear as separate boxes (sml, lk) later; the rack only shows they were loaded |
-| The secure world | `zone` labelled SECURE WORLD, holding `box` TRUSTY | the catalogue uses zones for boundaries. sml is drawn outside the zone on purpose: the facts say the SPL jumps to sml, the secure-world monitor, which starts with Trusty. They do not say sml sits inside Trusty. The line from sml to Trusty is labelled THEN, not STARTS, to avoid saying more than that |
-| The unlock record in miscdata | `book` labelled MISCDATA | a ledger/record part; the partition name is the label |
-| The two asks (0x33, 0x20) | one `track` line `ask` from lk to Trusty, used twice, with notes naming the command | one channel drawn once; the command is in the note |
-| Not-read hand-off from sml to lk | `wire` (dashed) with a kept yellow note HAND-OFF: NOT READ beside it | dashed means "talks to / control signal"; the note says it was not read and sits 24 units from the line so it does not hug it. No chip travels on it |
-| What checks the SPL | a kept note under POWER ON: "WHAT CHECKS THE SPL: NOT READ" | no part drawn, because nothing was read |
-| The boot state colour | `lamp` | the status part; shows colour only through its label text (see above) |
-| lk's own check | `sieve` on a `wire` from lk | a validation/filter part; the note says it is logged, feeds the kernel command line, and does not set the colour |
-| Android | `screen` | the OS that gets the colour; its text changes to LINEAGEOS in step 10 to show what booted on the tablets |
-| Download Mode | `box` | a destination, drawn below the junction |
-| Where the colour goes | `dot` junction `junc` with `track`s to Android and to Download Mode | the kit's way to branch a line |
-| Red / failure | `fail` badge on the lamp, red `chip` and `ball` runs | red only for failure, as the style rules say |
+| The power key press | `box` "POWER ON" | No kit part for a key press; a plain labelled box |
+| SPL, sml, lk | `box` | Named services in a chain |
+| The key fingerprint the SPL carries | `key` | The kit's secret/credential part; it is a fingerprint, not the key itself, so the label says KEY FINGERPRINT |
+| The four loaded pieces (teecfg, sml, trustos, lk) | One `queue` with 4 slots, filled one by one | A rack of slots; stands for "the four pieces", not a real queue. The same names also appear as separate boxes (sml, lk) later; the rack only shows they were loaded |
+| The secure world | `zone` labelled SECURE WORLD, holding `box` TRUSTY | The catalogue uses zones for boundaries. sml is drawn outside the zone on purpose: the facts say the SPL jumps to sml, the secure-world monitor, which starts with Trusty. They do not say sml sits inside Trusty. The line from sml to Trusty is labelled THEN, not STARTS, to avoid saying more than that |
+| The unlock record in miscdata | `book` labelled MISCDATA | A ledger/record part; the partition name is the label |
+| The two asks (0x33, 0x20) | One `track` line `ask` from lk to Trusty, used twice, with notes naming the command | One channel drawn once; the command is in the note |
+| Not-read hand-off from sml to lk | `wire` (dashed) with a kept yellow note HAND-OFF: NOT READ beside it | Dashed means "talks to / control signal"; the note says it was not read and sits 24 units from the line so it does not hug it. No chip travels on it |
+| What checks the SPL | A kept note under POWER ON: "WHAT CHECKS THE SPL: NOT READ" | No part drawn, because nothing was read |
+| The boot state colour | `lamp` | The status part; shows colour only through its label text (see above) |
+| lk's own check | `sieve` on a `wire` from lk | A validation/filter part; the note says it is logged, feeds the kernel command line, and does not set the colour |
+| Android | `screen` | The OS that gets the colour; its text changes to LINEAGEOS in step 10 to show what booted on the tablets |
+| Download Mode | `box` | A destination, drawn below the junction |
+| Where the colour goes | `dot` junction `junc` with `track`s to Android and to Download Mode | The kit's way to branch a line |
+| Red / failure | `fail` badge on the lamp, red `chip` and `ball` runs | Red only for failure, as the style rules say |
 
 ## Facts left out
 
