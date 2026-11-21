@@ -430,7 +430,7 @@ The end of all this is a kernel command line. Shell can't read `/proc/cmdline` o
 | `vbmeta.size` | `29312` | `29312` | `0x1a0428`, among libavb's strings | |
 | `veritymode` | `enforcing` | not read | `0x1a26b8`, among libavb's strings | |
 | `secureboot` | `1` | not read | `0x14d370`, `%d` | |
-| `warranty_bit` | `0` | **`1`** | `0x14e550`, `%d` | `set_warranty_fuse`, `Set Warranty Bit : %s`, and the Download Mode line `WARRANTY VOID : 0x%x (0x%x)`. So it's likely a fuse, but what sets it wasn't read. Both unlocked tablets read `0` right after the unlock in October. The one re-read here reads `1` a month later, so something after the unlock set it |
+| `warranty_bit` | `0` | **`1`** | `0x14e550`, `%d` | `set_warranty_fuse`, `Set Warranty Bit : %s`, and the Download Mode line `WARRANTY VOID : 0x%x (0x%x)`. So it's likely a fuse. The routine that logs `Set Warranty Bit` (`0x9f0358c0`) is called from four places, all inside Download Mode's per-image check, among the strings that label each flashed image `SAMSUNG` or `CUSTOM`. So it likely flips when a non-Samsung image is flashed in Download Mode, which in the how-to is TWRP. That's from the strings around the calls, not the branches. Both unlocked tablets read `0` right after the unlock in October, before TWRP. The one re-read here reads `1` |
 | `ulcnt` | `0` | `0` | `0x14e5c8`, `%d` | Nothing else. The name reads like an unlock count, but the unlocked tablet reads `0` too, so it isn't one, or doesn't count this kind of unlock |
 | `rp` | `6` | not read | `0x14e5e0` (`%s`) and `0x14e600` (`%d`) | `_check_rp_version`, and the Download Mode line `RP SWREV: B%d Kb%d,Kr%d,Dt%d,Vb%d,Vbs%d S%d`. Whether `6` is the `B` there is for the screen photo to show |
 | `svb.ver` | `SVB1.0` | not read | `0x14e5a8`, with `SVB1.0` itself at `0x14e5c0` | `Display warning svb logo....` |
@@ -488,13 +488,26 @@ product  /product ext4  ro  wait,avb=vbmeta,logical,first_stage_mount
 gzip -dc boot/unpacked/ramdisk | cpio -id fstab.ums512_25c10 init
 ```
 
-So the fstab names `vbmeta_system` for `system`, `vbmeta_vendor` for `vendor`, and the main vbmeta for `product`. What Android's `fs_mgr` does with those names wasn't read: whether it checks the partition against that vbmeta, or only waits for it. The main vbmeta already carries all three hashtrees, so this doesn't show `vendor` is checked against `vbmeta_vendor`.
+So the fstab names `vbmeta_system` for `system`, `vbmeta_vendor` for `vendor`, and the main vbmeta for `product`. In Android 11's source (`init/first_stage_mount.cpp` and `fs_mgr/fs_mgr_fstab.cpp`, read on AOSP's GitHub mirror), `avb=<name>` turns verification on and adds `<name>` to a list of partitions init waits for before it starts. The hashtrees themselves come from one handle opened on the main `vbmeta` and the partitions it chains to. So the names mean "have this partition ready", not "check against this one", and `vendor` isn't checked against `vbmeta_vendor`. The stock tablet's boot log agrees (next paragraphs): one handle, then a verity table for each partition.
 
 A copy of the same fstab sits in `/vendor/etc/` (read off the stock tablet, 21 Nov 2026), but it differs: its `vendor` and `product` lines say plain `avb`. The device tree has no fstab node (only `/firmware/android/vbmeta` with its list of partitions), and first-stage init mounts `/vendor` itself, so the ramdisk copy is the one it can read. That's reasoning, not a read of init's code.
 
 What's on a real tablet's `vbmeta_vendor` partition wasn't read: no bundle ships an image for it, `lk` logs it as skipped, and shell can't read the block device. The `avb_keys` on the `system` line name Google's GSI keys, but the ramdisk has no `/avb/` folder with them in it.
 
-The ramdisk's `init` is AOSP's (its strings carry `system/core/fs_mgr/libfs_avb/` paths), and it has the lines `Allow signature verification error when the device is unlocked` and `Allow invalid metadata when the device is unlocked`. That's the likely way a different `system` gets through once unlocked. Which branch runs would show in an unlocked tablet's boot log, and that hasn't been read.
+The ramdisk's `init` is AOSP's (its strings carry `system/core/fs_mgr/libfs_avb/` paths), and it has the lines `Allow signature verification error when the device is unlocked` and `Allow invalid metadata when the device is unlocked`.
+
+The `avb_keys` on the `system` line matter. In the source, an entry with `avb_keys` first tries the vbmeta in the `system` image's own footer, checked against those keys. A locked tablet rejects a key it doesn't know. An unlocked one lets it through. Only if that fails does init fall back to the hashtree in the main vbmeta. The stock tablet's kernel log, from a bugreport taken a minute after a restart (21 Nov 2026), shows the locked side of that:
+
+```
+init: [libfs_avb]Returning avb_handle with status: Success
+init: [libfs_avb]Found unknown public key used to sign /system
+init: [libfs_avb]Unknown public key is not allowed
+init: Failed to load offline vbmeta for /system
+init: Fallback to built-in hashtree for /system
+init: [libfs_avb]Built verity table: ...
+```
+
+The LineageOS GSI image carries its own footer too: a hashtree descriptor for `system`, signed with an RSA-2048 key that isn't Samsung's (`avbtool info_image`, key sha1 `cdbb7717…0617d`). So on an unlocked tablet, the likely path is: the same unknown-key line, but allowed, and `system` mounts with the GSI's own hashtree. Nothing in vbmeta has to change. That's the source plus the locked log. The unlocked tablet's own boot log hasn't been read.
 
 That key isn't the A10e's (`e553992a79ab561a4805371cce123d1ee73db21b`).
 
@@ -561,6 +574,7 @@ The A10e ran Samsung's TEEGRIS. This tablet runs **Trusty**, Google's little-ker
 ### Which TEE, from the files
 
 - The kernel's `gta8wifi_eur_open_defconfig` has `CONFIG_TRUSTY=y`, `CONFIG_TRUSTY_LOG=y`, `CONFIG_TRUSTY_VIRTIO=y` and `CONFIG_DRM_SPRD_GSP_IPC_TRUSTY=y`, and `# CONFIG_TEE is not set` (so no OP-TEE). There's no `CONFIG_TZDEV`, which is what TEEGRIS needs. `lk` has 49 lines with `trusty` in any case (`strings -n 8`) and none with `teegris`.
+- On a running stock tablet (kernel log, 21 Nov 2026), the kernel reports `trusty version: sharkl5pro, Built: 01:24:05 Oct 24 2023`, the same build as the file. It reserves memory at `0x94000000` (`sml-mem`) and `0x94040000` (`tos-mem`, 95 MiB), matching where the SPL puts `sml` and `teecfg`. And it finds PSCI 1.0 behind `smc` calls, which fits `sml` being the BL31 monitor. After Android starts, a vendor service asks Trusty to check images again (`TrustyKernelBootcp: kernel_bootcp_verify_all`). Trusty's own log then shows it loading `vbmeta` and `pm_sys`'s footer and running `load_and_verify_vbmeta` itself. So one of the trusted apps is a boot checker that runs after boot. Which blob it is wasn't read
 - `tos-sign.bin`'s body is the Trusty TOS: a little-kernel image (`welcome to lk/MP`, `lk/trusty/lib/trusty/smcall.c`, `Initializing Trusted OS SMC handler`) built `sharkl5pro, Built: 01:24:05 Oct 24 2023`, with nine packed 32-bit ELF blobs behind the kernel. Their `com.android.trusty.*` strings name keymaster(.secure), gatekeeper, the storage clients and proxy, rpmb.bl, storage_auth.rpmb, hwkey, hwrng, kernelbootcp and oemcrypto(.secure)/Widevine. That's more names than blobs, and a name in a string isn't proof of a running app.
 - `sml-sign.bin` is ARM Trusted Firmware's BL31 with the Trusty dispatcher (`NOTICE:  BL31: %s`, `trusty_fast`). So the stack is lk (normal world) → BL31 monitor at EL3 (sml) → Trusty TOS (tos), the usual Trusty layout.
 
