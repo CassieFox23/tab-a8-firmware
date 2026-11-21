@@ -2,9 +2,9 @@
 
 a static read of the stock firmware on a **Samsung Galaxy Tab A8 (SM-X200)** - the tablet that took [LineageOS](https://lineageos.org), next to the phone that wouldn't.
 
-![an animated blueprint sheet of what happens when you press power on a Galaxy Tab A8: the first loader checks the next pieces against a key fingerprint and jumps to sml, which starts with Trusty in the secure world; the bootloader lk reads an unlock record and asks the secure world if it is genuine; a locked tablet's boot image goes to Trusty to be checked, an unlocked one skips the check and the lamp reads orange; a failed check drops to Download Mode; Android gets the colour, and two unlocked tablets read orange and booted LineageOS](figures/blueprint-power-on.gif)
+![an animated blueprint sheet of what happens when you press power on a Galaxy Tab A8: the first loader checks the next pieces and jumps to sml; the bootloader lk asks the secure world whether the unlock record is genuine; a locked tablet's boot image goes to the secure world to be checked, an unlocked one skips the check and reads orange; a failed check drops to Download Mode](figures/blueprint-power-on.gif)
 
-**the read is in**: the firmware's layout, verified boot, why a GSI fits, the bootloader's signing chain and its first two stages, and the secure world. there's a LineageOS how-to from two real flashes too. what's still open is listed at the end of each section of the [teardown](Tab-A8-teardown.md).
+**the read is in**: the firmware's layout, verified boot, why a GSI (a generic system image - one Android build made to run on many devices) fits, the bootloader's signing chain and its first two stages, and the secure world. there's a LineageOS how-to from two real flashes too. what's still open is listed at the end of each section of the [teardown](Tab-A8-teardown.md).
 
 the short of it: on this tablet the bootloader doesn't decide alone. it asks a **secure world** (Trusty) whether the unlock is genuine and whether the boot image passes, and sets the boot colour from the answers. the A10e kept those decisions in `sboot`, the part you can read.
 
@@ -18,11 +18,11 @@ new to this? [the plain version](Tab-A8-teardown.md#the-plain-version) is six sh
 
 - **unlocking isn't a flag the bootloader just believes.** the switch in Developer options is one byte, but the unlock itself is a record the secure world recomputes and compares whenever the bootloader asks.
 
-![the unlock step by step in four lanes: by hand (OEM unlocking on, both volume keys, long-press Volume Up, the tablet wipes itself), the bootloader (is an unlock possible, reading the record on every boot after), the secure world (Trusty recomputes the expected 64 bytes) and storage (the last byte of persistent, the record at miscdata + 0x2000); what runs the unlock between the long press and the wipe, what writes the switch byte and the record, the extra Knox Guard check and the key derivation are marked not read](figures/unlock-steps.png)
+![the unlock step by step in four lanes: by hand, the bootloader, the secure world (Trusty recomputes the expected 64 bytes) and storage (the switch byte in persistent, the record in miscdata); what runs the unlock, what writes the byte and the record, the extra Knox Guard check and the key derivation are marked not read](figures/unlock-steps.png)
 
-- **the secure world is Trusty, and apps are fenced away from it.** the hop into it and its key derivation weren't read, and the pictures say so.
+- **the secure world is Trusty, and apps are fenced away from it.** the hop into it and its key derivation weren't read, and the picture says so.
 
-![the secure world and the fence around it: lk makes an smc into an sml stage (a BL31 monitor by its strings) and on to the Trusty TOS, with that hop and the hardware-key box marked as not read; on the Android side 23 domains can open the Trusty IPC node and no app domain is among them, keys reach it only through keystore and the keymaster HAL, and an app can find the Widevine HAL but not the key ones](figures/secure-world.png)
+![the secure world and the fence around it: lk calls through sml into Trusty, with that hop and the hardware-key box marked as not read; on the Android side 23 domains can open the Trusty IPC node and no app domain is among them, and keys reach it only through keystore and the keymaster HAL](figures/secure-world.png)
 
 - **a current GSI fits because the vendor's Treble level is one the GSI still ships.** the A10e's wasn't.
 
