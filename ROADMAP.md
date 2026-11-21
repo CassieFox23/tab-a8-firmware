@@ -160,7 +160,7 @@ Finish line: the secure world's *not read* line is down to things that need the 
 
 Small, separate, and none blocks another.
 
-- [ ] `grd_fw.img`: what it is, and whether it's encrypted or only compressed
+- [ ] `grd_fw.img`: what it is, and whether it's encrypted or only compressed. 21 Nov: two payloads, no compression header, random-looking in most 4 KiB windows, so still undecided. Its header carries `0x0502`, the same number as the stock tablet's `ro.security.grdm_status` `FW_VER:0502`, a lead on what it is
 - [ ] The `teecfg` table and the Cortex-M4 image, both still at sizing level
 - [ ] Whether Samsung's published kernel source builds into this exact kernel, and where the `-29056031-abX200XXS6DYG6` part of its version comes from. So far: the running config matches the defconfig on all 4,083 entries, and the suffix can only come from a build-time `LOCALVERSION`. No build has been run
 - [ ] Android's own `checkvintf` run on the vendor and the GSI, and the per-HAL rows compared

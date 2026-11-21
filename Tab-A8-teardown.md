@@ -166,6 +166,8 @@ The five signed files aren't encrypted. Each body hashes to the SHA-256 stored i
 
 `grd_fw.img` is the odd one. It reads 7.99 bits per byte the whole way through, which is what compressed or encrypted data looks like, and it has no strings. What it's for isn't known.
 
+A closer look (21 Nov 2026): after the 256-byte header come two blocks of `0x1ba00` bytes, each a `0x1b82c`-byte payload and a tail, and the file ends in a `SignerVer02` block naming `X200XXS6DYG6`. The two payloads differ. Neither starts with a known compression header. In 4 KiB windows most of each payload passes a chi-square test for random bytes (median 259, where random sits near 255), with one stretch of structure (a run of 35 zero bytes at `0x1b109`). A strong compressor and a cipher both look like that, so this doesn't settle compressed against encrypted. One lead: the file header opens with `0x0502` (`02 05`), and the first payload with `05 02`. The stock tablet reports `ro.security.grdm_status` as `FW_VER:0502`. So `grd_fw` is likely the firmware behind `grdm`, but nothing read here connects the two.
+
 ### The DHTB container
 
 The five `-sign.bin` files share a layout:
