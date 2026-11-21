@@ -4,6 +4,8 @@ A static read of the stock firmware on a **Samsung Galaxy Tab A8 (SM-X200)**, th
 
 ![An animated blueprint sheet of what happens when you press power on a Galaxy Tab A8: the first loader checks the next pieces and jumps to sml; the bootloader lk asks the secure world whether the unlock record is genuine; a locked tablet's boot image goes to the secure world to be checked, an unlocked one skips the check and reads orange; a failed check drops to Download Mode](figures/blueprint-power-on.gif)
 
+<sub>Animated sheet drawn with [blueprint](https://github.com/intincrab/blueprint) by intincrab (MIT).</sub>
+
 **The read is in**: the firmware's layout, verified boot, why a GSI (a generic system image: one Android build made to run on many devices) fits, the bootloader's signing chain and its first two stages, and the secure world. There's a LineageOS how-to from two real flashes too. What's still open is listed at the end of each section of the [teardown](Tab-A8-teardown.md).
 
 The short of it: on this tablet the bootloader doesn't decide alone. It asks a **secure world** (Trusty) whether the unlock is genuine and whether the boot image passes, and sets the boot colour from the answers. The A10e kept those decisions in `sboot`, the part you can read.
