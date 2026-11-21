@@ -99,7 +99,7 @@ Also read off it while locked (21 Nov): `ro.boot.vbmeta.digest` matches the stoc
 
 During its flash:
 
-- [ ] Which key confirms the unlock
+- [ ] Which key confirms the unlock. `lk`'s own "Unlock bootloader?" picture says Volume Up (21 Nov); the box wants it seen on the tablet
 - [ ] samloader-rs run in a normal terminal window, the one way it wasn't run
 - [ ] The how-to followed as written, a third time
 - [ ] What the first two tablets run today, read again. Their rows rest on October's logs
@@ -129,7 +129,7 @@ The boot path was read. These are the pieces beside it.
 - [ ] The other callers of command `0x20`: `0x9f1208b0` on `pm_sys`, `0x9f123d88`, and which images come through the loader `0x9f00ef18`
 - [ ] The three calls on the unlocked path that most likely draw the startup warning
 - [ ] The second `smc` at `0x9f143d40`, the 18 branches into `0x9f010c48`, what `grdm` is, and the warranty bit. Leads, not answers: `lk` adds `androidboot.grdm_status=%s` (a stock tablet's command line has `NORMAL`) and has the line `GRDM BL Auth key derived from SHK on UNISOC LK`. A separate property, `ro.security.grdm_status`, reads `FW_VER:0502`; what sets that one wasn't read. `warranty_bit` read `0` both locked and unlocked
-- [ ] The 74 pictures packed in the file
+- [x] The 74 pictures packed in the file. Carved whole and looked at 21 Nov, described in the teardown's "Inside lk" (not committed, they're Samsung's)
 - [x] What `lk` hands the kernel on a locked, stock boot, from a bugreport's copy of the command line (21 Nov). In the teardown's "What lk hands the kernel", each key against its format string in `lk`
 - [ ] The same command line off an unlocked tablet: `flash.locked`, `ulcnt`, `warranty_bit`, `kg` and the vbmeta digest after an unlock
 - [ ] Picture: the unlock diagram with its grey boxes filled

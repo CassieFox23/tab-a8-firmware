@@ -217,7 +217,18 @@ The full key ids are SHA-256 values: key A `29f0d80a5959c8513e45c56596d3ff31d217
 
 - ARM64 code up to about 1,314 KiB (the last `ret` is at body offset `0x148954`)
 - Tables and strings after that: binwalk finds CRC32 tables, an AES S-box and SHA-256 constants around 1.4 to 1.7 MiB
-- JPEG pictures from 1,828 KiB on (74 JPEG start markers), which is why the file's entropy reads so high. What they show wasn't looked at
+- JPEG pictures from 1,828 KiB on (74 JPEG start markers), which is why the file's entropy reads so high
+
+A plain search finds 76 JPEG start markers, but two of them sit inside other pictures. Walking each picture's segments to its own end marker gives 74 whole pictures, and all 74 decode. They aren't in this repo, since they're Samsung's artwork. What they are (looked at 21 Nov 2026):
+
+- **11 full screens at 1920x1200:** the Samsung Galaxy boot logo, a plain Samsung logo, a charging ring, the Download Mode background ("Downloading... Do not turn off target", with `Volume Down Key + Side key for more than 7 secs : Cancel (restart phone)`), two versions of the warning screen before it, the unlocked-bootloader warning ("This tablet's bootloader is unlocked and its software integrity can't be verified", `PRESS POWER KEY TO CONTINUE`), the "Lock bootloader?" and "Unlock bootloader?" questions, a "Security Error" screen, and "An error has occurred while updating the device software"
+- **The two warning screens differ in one line.** One offers `Volume up : Continue`, `Volume down : Cancel (restart phone)` and `Side key : Show Barcode`. The other has `Volume up long press : Device unlock mode` in place of the barcode line. Which one a tablet gets wasn't read
+- **"Unlock bootloader?"** says `Volume up : Yes` (`Unlock bootloader (may void warranty)`) and `Volume down : No` (`Do not unlock bootloader and restart phone`). It calls the device a phone
+- A red-on-black banner, "This tablet is not running Samsung's official software", and a tall Knox picture, "System software not authorized by Samsung has been found on your phone"
+- 30 frames of a shield with a spinning ring (260x260), a yellow warning triangle and a few bars and blocks
+- Labels for Download Mode's USB ports (`USB Port #00` to `#10`) and for upload mode, Samsung's crash-dump screen: `UPLOAD MODE`, `KERNEL PANIC`, `FORCED UPLOAD`, `WATCHDOG RESET` and others. Some name parts of Qualcomm chips (`RIVA`, `LPASS`, `DSPS`, `RPM`, `SBL`), which this Unisoc tablet doesn't have, so this art is likely shared across Samsung's bootloaders
+
+The status lines on the Download Mode screen (`OEM LOCK`, `KG STATUS` and the rest) aren't in any picture. They're text drawn over the background from `lk`'s format strings, so how they read on a real tablet still needs a photo.
 
 The strings say everything the A10e read went looking for is in here: `avb` (58 lines), `vbmeta` (70), `unlock` (37), `rpmb` (70), `efuse` (30), `odin` (59), `fastboot` (38), plus `Custom Binary Blocked By OEM Lock` and `[KG] failed to malloc kg state block`. So this bootloader has Knox Guard text in it too. Whether a path behind it runs on this tablet is for the read.
 

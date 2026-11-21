@@ -143,7 +143,7 @@ On a third tablet, still on stock, the header and all 58 entries matched the CSC
 1. Power off.
 2. Hold both volume keys and plug in, same as before.
 3. On the warning screen, **long press Volume Up**.
-4. Confirm on the next screen. The screen says which key. It was pressed by hand and the key wasn't written down.
+4. Confirm on the next screen. The screen says which key. It was pressed by hand and the key wasn't written down. The "Unlock bootloader?" picture packed in the bootloader says `Volume up : Yes` and `Volume down : No`, but that's read from the file, not off the tablet.
 5. The tablet wipes itself and restarts.
 
 It sits on the Samsung logo long enough to look like a boot loop. It wasn't one, either time. From then on there's a warning at startup about the unlocked bootloader.
