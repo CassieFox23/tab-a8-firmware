@@ -439,7 +439,7 @@ The end of all this is a kernel command line. Shell can't read `/proc/cmdline` o
 | `ulcnt` | `0` | `0` | `0x14e5c8`, `%d` | Nothing else. The name reads like an unlock count, but the unlocked tablet reads `0` too, so it isn't one, or doesn't count this kind of unlock |
 | `rp` | `6` | not read | `0x14e5e0` (`%s`) and `0x14e600` (`%d`) | `_check_rp_version`, and the Download Mode line `RP SWREV: B%d Kb%d,Kr%d,Dt%d,Vb%d,Vbs%d S%d`. Whether `6` is the `B` there is for the screen photo to show |
 | `svb.ver` | `SVB1.0` | not read | `0x14e5a8`, with `SVB1.0` itself at `0x14e5c0` | `Display warning svb logo....` |
-| `kg` / `kg.bit` | `0x4` / `00` | `0x1` / `00` | `0x14e638` / `0x14e650` | The Download Mode line `KG STATUS : %s (%s)`. Android's own `knox.kg.state` reads `Completed` |
+| `kg` / `kg.bit` | `0x4` / `00` | `0x1` / `00` | `0x14e638` / `0x14e650` | The Download Mode line `KG STATUS : %s (%s)`. `lk` carries a table of Knox Guard states at body offset `0x1c0b10`: `0` PRENORMAL, `1` CHECKING, `2` ACTIVE, `3` LOCKED, `4` COMPLETED, `5` ERROR, `6` BROKEN, `7` ALLZERO. Read as an index into it, the stock `0x4` is COMPLETED, which matches Android's own `knox.kg.state` of `Completed`, and the unlocked tablet's `0x1` is CHECKING. That `kg` is that index is a research agent's code read, not checked here. There's also `[KG] OEMUNLOCK change state to BROKEN from PRENORMAL` |
 | `grdm_status` | `NORMAL` | not read | `0x14e618`, `%s` | `GRDM STATUS: %s(%s)` on the Download Mode screen, `GRDM BL Auth key derived from SHK on UNISOC LK`. A separate property, `ro.security.grdm_status`, reads `FW_VER:0502` |
 | `em.status` / `sb.debug0` | `0x0` / `0x0` | not read | `0x14e4f0` / `0x14e510` | |
 | `fastbootd` | `false` | not read | `0x14e530` | |
@@ -581,6 +581,14 @@ debugfs -R 'ls -l /system/system_ext/apex' GSI.img
 So all three line up. This is a read of the files, not a run of Android's own `checkvintf` tool, and the per-HAL rows inside the matrix weren't compared one by one.
 
 Samsung's own stock system (Android 14) ships matrices for levels 4 to 8, so it leans on the same level 5 match. An Android 11 vendor under a newer system is how this tablet ships.
+
+Past GSIs: mainline Linux knows the chip, but not this tablet. `arch/arm64/boot/dts/sprd/` in Linus's tree has `ums512.dtsi` and `ums512-1h10.dts`, Unisoc's own reference board, added in 2023 (commit `2b4881839a39`, checked 21 Nov 2026). No SM-X200 device tree or postmarketOS port turned up. Ubuntu Touch once had a `gta8` port on Halium 11, now marked obsolete on its device page.
+
+Three smaller things the files say (21 Nov 2026):
+
+- **The Wi-Fi model is told it's Wi-Fi only twice.** `lk` puts `modem=shutdown` on the command line, near where it looks up the modem's device-tree nodes. It also has the string `ums512 wifionly 1000`, compared against the device tree's `sprd,sc-id`. `teecfg` has a `wifionly` slot. Which test picks `modem=shutdown` wasn't decoded.
+- **Rollback.** `lk` checks versions against fuses and RPMB: `RP check error`, `Binary version mismatch`, `Checking %s, SWREV = %d`, and separate version checks for the Wi-Fi/Bluetooth and GNSS firmware (`read wcn version in rpmb`, `gnss ver is too low`). In general, a Samsung tablet won't take firmware with a lower bootloader revision than the one it has (Samsung's Knox root-of-trust docs describe rollback fuses; the detail is from community reports). Samsung's newest build for this tablet is still the one it runs, so nothing is locked out today.
+- **Two firmware partitions** (`wcnmodem`, `gnssmodem`) are rollback-checked on their own. By their names they're the Wi-Fi/Bluetooth and GNSS firmware. That's the names, not a read.
 
 ## The secure world
 

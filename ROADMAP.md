@@ -177,6 +177,6 @@ What the repo hadn't looked at: newer GSIs, the rescue path under Download Mode,
 - [ ] A 23.2 build tried on a tablet, so there is an SM-X200 report
 - [x] The rescue path under Samsung's Download Mode, if a flash or relock bricks a tablet. 21 Nov: the chip's ROM rescue mode needs loaders signed for this device, which nothing shows Samsung shipping; the real fallbacks are Download Mode and a service centre. In the how-to's "Going back to stock"
 - [x] What a GSI tablet keeps unpatched: the vendor, kernel, bootloader, Trusty and firmware fixes published after Aug 2025. 21 Nov: 9 Unisoc entries name the T618 (7 High, 2 Medium), plus the boot ROM's unpatchable CVE; most need physical access. In the teardown's "What a GSI tablet keeps unpatched"
-- [ ] Loose ends: Knox Guard's values, how the Wi-Fi-only build shuts the modem down, what the rollback level would block, and mainline Linux on this chip
+- [x] Loose ends: Knox Guard's values, how the Wi-Fi-only build shuts the modem down, what the rollback level would block, and mainline Linux on this chip. 21 Nov: lk's KG state table (0x4 COMPLETED, 0x1 CHECKING), `modem=shutdown` and `ums512 wifionly 1000` found but their tests not decoded, rollback strings plus generic Samsung behaviour, mainline has Unisoc's UMS512 reference board only
 
 Finish line: each box is answered with sources, or says what couldn't be found.
