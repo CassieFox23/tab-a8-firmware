@@ -1,6 +1,6 @@
 # Tools
 
-Small Python scripts, standard library only, apart from matplotlib for the charts and numpy for `pin_base.py`. Most take file paths as arguments, so keep the firmware wherever you like. `pit_table.py` and `partition_chart.py` read `samloader print-pit` output on stdin instead. The four charts with their numbers written in (`memory_map_chart.py`, `treble_fit_chart.py`, `tool_calls_chart.py`, `cost_chart.py`) redraw their picture in `figures/` unless you give them another path.
+Small Python scripts (plus one Java probe), standard library only, apart from matplotlib for the charts and numpy for `pin_base.py`. Most take file paths as arguments, so keep the firmware wherever you like. `pit_table.py` and `partition_chart.py` read `samloader print-pit` output on stdin instead. The four charts with their numbers written in (`memory_map_chart.py`, `treble_fit_chart.py`, `tool_calls_chart.py`, `cost_chart.py`) redraw their picture in `figures/` unless you give them another path.
 
 | Script | What it does | Needs |
 |---|---|---|
@@ -15,3 +15,4 @@ Small Python scripts, standard library only, apart from matplotlib for the chart
 | `pin_base.py` | Finds the load address of a raw ARM64 image: votes on pointer-minus-string offsets, then checks the ADRP page phase. `--high` looks for pointers at the top of the 64-bit space (a kernel like Trusty's), `--end N` stops before data packed in behind the code | Python 3, numpy |
 | `a64_refs.py` | Finds the code in a raw ARM64 image that points at an address or a string, and the function it sits in | Python 3 |
 | `dt_root.py` | Prints the root `model` and `compatible` of each device tree in a `.dtb` or an Android `dt_table` (like `dtbo.img`), with node counts | Python 3 |
+| `widevine_probe/` | Reads the Widevine level a tablet reports through Android's own `MediaDrm` (`securityLevel`, CDM and OEMCrypto versions, HDCP), over adb with nothing installed: `run.sh <serial>` builds one Java class, runs it with `app_process` as the shell user and deletes it again. A session open fails on a tablet that was never provisioned, which is itself an answer | JDK, Android SDK (`platforms/android-36`, `build-tools/36.0.0`), adb |
