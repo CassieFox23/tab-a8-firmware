@@ -6,7 +6,7 @@ A static read of the stock firmware on a **Samsung Galaxy Tab A8 (SM-X200)**, th
 
 <sub>Animated sheet drawn with [blueprint](https://github.com/intincrab/blueprint) by intincrab (MIT).</sub>
 
-**The read is in**: the firmware's layout, verified boot, why a GSI (a generic system image: one Android build made to run on many devices) fits, the bootloader's signing chain and its first two stages, and the secure world. There's a LineageOS how-to from two real flashes too. What's still open is listed at the end of each section of the [teardown](Tab-A8-teardown.md).
+**The read is in**: the firmware's layout, verified boot, why a GSI (a generic system image: one Android build made to run on many devices) fits, the bootloader's signing chain and its first two stages, and the secure world. There's a LineageOS how-to from two real flashes too, and readings off a third tablet that's still locked on stock. The last round looked at the field around it: newer GSIs, the rescue path under Download Mode, and what a GSI tablet keeps unpatched. What's still open is listed at the end of each section of the [teardown](Tab-A8-teardown.md) and in the [roadmap](ROADMAP.md).
 
 The short of it: on this tablet the bootloader doesn't decide alone. It asks a **secure world** (Trusty) whether the unlock is genuine and whether the boot image passes, and sets the boot colour from the answers. The A10e kept those decisions in `sboot`, the part you can read.
 
@@ -32,6 +32,14 @@ New to this? [The plain version](Tab-A8-teardown.md#the-plain-version) is six sh
 
 - **A current GSI fits because the vendor's Treble level is one the GSI still ships.** The A10e's wasn't. The two are side by side in [why a GSI fits](Tab-A8-teardown.md#why-a-gsi-fits).
 
+- **A real tablet matches the files.** A third tablet, still locked, reports the same vbmeta digest avbtool works out from the stock images. One of the unlocked tablets still reports it a month into LineageOS, so its vbmeta was never touched. The locked one reads Widevine `L1` through Android's own `MediaDrm` ([`tools/widevine_probe`](tools/widevine_probe/)).
+
+- **LineageOS gets past verified boot without changing vbmeta.** A locked tablet's boot log shows Android trying the `system` image's own signature, rejecting the unknown key because it's locked, and falling back to Samsung's. Unlocked, the same code lets the key through, and the GSI carries its own. See [verified boot](Tab-A8-teardown.md#verified-boot).
+
+- **The secure world runs nine apps.** They're named in the [teardown](Tab-A8-teardown.md#which-tee-from-the-files). One re-checks the modem side's images after Android starts, and one is Widevine's, the part behind that `L1`.
+
+- **A GSI tablet keeps some old holes.** A GSI replaces `system` only, so the vendor, kernel, bootloader, Trusty and firmware stay at the August 2025 patch, and Samsung has no newer build. Most of what's been published since needs the tablet in hand. See [what a GSI tablet keeps unpatched](Tab-A8-teardown.md#what-a-gsi-tablet-keeps-unpatched).
+
 The full read, with addresses and the command behind each claim, is the [teardown](Tab-A8-teardown.md). Its last section lists the [sources and tools](Tab-A8-teardown.md#sources-and-tools).
 
 ## What this is for
@@ -53,7 +61,7 @@ The sibling to [a10e-firmware](https://github.com/CassieFox23/a10e-firmware), a 
 | [`docs/partition-map.md`](docs/partition-map.md) | All 58 partitions from the PIT |
 | [`docs/how-the-code-was-read.md`](docs/how-the-code-was-read.md) | The tools that read the bootloader and the secure world |
 | [`docs/what-it-took.md`](docs/what-it-took.md) | Tool calls, tokens and an API-price cost estimate for building the repo |
-| [`tools/`](tools/README.md) | Eleven small scripts |
+| [`tools/`](tools/README.md) | Eleven small scripts and a Widevine probe |
 | `figures/` | The pictures: charts drawn by `tools/`, diagrams from the pages below |
 | `.archify/` | Eight diagrams as standalone pages with their sources: the flash, vbmeta, the signing chain, the boot chain, the secure world, the two devices, power on, the unlock |
 | `.blueprint/` | The source of the animated power-on sheet |
