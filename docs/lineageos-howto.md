@@ -256,6 +256,8 @@ What was shown to work:
 
 What was **not** done: putting the whole stock firmware back. No stock `super`, `boot` or bootloader files were ever flashed back onto either tablet, and neither was relocked. So there's a tool that can write to this tablet, and the stock files are intact on disk, but the full restore itself is untested.
 
+**If a flash goes wrong.** This was researched, not tested (21 Nov 2026). The fallback that's known to exist is Samsung's own Download Mode, reached with the key combo in step 4, and after that a Samsung service centre. The chip also has a rescue mode in its boot ROM, under Samsung's Download Mode, but it only talks to loaders signed for the exact device. Nothing public shows Samsung shipping those for this tablet, and no report of anyone using that mode on an SM-X200 turned up. So don't count on it.
+
 ## What broke along the way
 
 - **The older Python `samloader` can't download any more.** Version 0.4 answered `Model or region not found (403)` for every model tried, and its download step crashed. samloader-rs is the one that worked.

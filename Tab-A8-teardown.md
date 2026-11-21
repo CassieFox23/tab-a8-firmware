@@ -532,6 +532,18 @@ The code behind that is in [what lk does about verified boot](#what-lk-does-abou
 
 And a failed check while **locked** ends in Download Mode. The same section has the read.
 
+## What a GSI tablet keeps unpatched
+
+A GSI replaces `system` and nothing else. The vendor partition, the kernel, `lk`, Trusty and its apps, and the chip's firmware stay as they were on the stock build: the August 2025 patch. Samsung still lists `X200XXS6DYG6` as this tablet's newest build (`samloader check-update`, 21 Nov 2026), so no newer stock parts exist to borrow either. One example of what that covers: the Wi-Fi supplicant is `/vendor/bin/hw/wpa_supplicant` (read off the stock tablet), so it's frozen too.
+
+What's been published since (bulletins from September 2025 to November 2026, read 21 Nov 2026):
+
+- **Unisoc's bulletins** name the T618 in 9 entries, 7 High and 2 Medium, none Critical ([index](https://www.unisoc.com/en/support/product-security-bulletin)). Six are in the modem's IMS and let a network deny service. This is the Wi-Fi model, and its command line says `modem=shutdown`, so those likely don't reach it. One is in the bootloader's download module (`CVE-2026-80335`, High, needs physical access). One is in a kernel power driver (Medium, local, needs privileges), and one is in the TEE's ECDSA signing (`CVE-2025-31719`, Medium, local). The two named here were read on Unisoc's pages; the counts are a research agent's tally across the bulletins.
+- **The chip's boot ROM** carries `CVE-2022-38694`, an unchecked write that the CVE record lists for the T618. ROM can't be patched, and it needs a USB connection to the tablet.
+- **Samsung's bulletins** don't name models. Many of their items are for parts this tablet doesn't have: trustlets that aren't among its nine Trusty apps (Knox Vault, fingerprint, PROCA) and kernel drivers that aren't in its config (no PROCA or DualDAR). One that may apply is `SVE-2026-3217`, a High `wpa_supplicant` bug reachable from a nearby network. Whether Samsung's fix covers this model wasn't confirmed, but the supplicant here can't take it either way.
+
+So most of what's known needs the tablet in hand. The parts that face a network are the Wi-Fi stack, if that Samsung item applies, and the modem, which this model shuts down.
+
 ## Why a GSI fits
 
 This is the second wall the A10e hit. The tablet doesn't have it.

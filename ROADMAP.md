@@ -175,8 +175,8 @@ What the repo hadn't looked at: newer GSIs, the rescue path under Download Mode,
 
 - [x] Newer GSIs and their patch levels (21 Nov). The 22.2 line ended at the January build the tablets run (December 2025 patch); 23.2 builds ran to 24 May 2026, the last one adding VNDK 30 for Android 11 vendors; no SM-X200 report on 23.x found. In the how-to's "After it boots"
 - [ ] A 23.2 build tried on a tablet, so there is an SM-X200 report
-- [ ] The rescue path under Samsung's Download Mode, if a flash or relock bricks a tablet
-- [ ] What a GSI tablet keeps unpatched: the vendor, kernel, bootloader, Trusty and firmware fixes published after Aug 2025
+- [x] The rescue path under Samsung's Download Mode, if a flash or relock bricks a tablet. 21 Nov: the chip's ROM rescue mode needs loaders signed for this device, which nothing shows Samsung shipping; the real fallbacks are Download Mode and a service centre. In the how-to's "Going back to stock"
+- [x] What a GSI tablet keeps unpatched: the vendor, kernel, bootloader, Trusty and firmware fixes published after Aug 2025. 21 Nov: 9 Unisoc entries name the T618 (7 High, 2 Medium), plus the boot ROM's unpatchable CVE; most need physical access. In the teardown's "What a GSI tablet keeps unpatched"
 - [ ] Loose ends: Knox Guard's values, how the Wi-Fi-only build shuts the modem down, what the rollback level would block, and mainline Linux on this chip
 
 Finish line: each box is answered with sources, or says what couldn't be found.
