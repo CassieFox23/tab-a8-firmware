@@ -4,7 +4,7 @@ was built and read, split by kind.
 
 No firmware needed, the numbers are written in below. They were counted from
 the three sessions' own transcripts (and their helper agents) at about
-5:56 PM on 20 Nov 2026, while two of the sessions were still going - a
+7:46 PM on 20 Nov 2026, while one of the sessions was still going - a
 snapshot, not a final tally. The transcripts aren't in the repo.
 
 usage: python3 tools/tool_calls_chart.py [output.png]
@@ -23,8 +23,8 @@ KINDS = [("shell commands", "#89b4fa"), ("REA (Ghidra)", "#a6e3a1"),
 # session, what it did, [shell, REA, file tools, everything else]
 ROWS = [
     ("the build", "phases 0 to 4: the outline, the how-to, the first bootloader read", [224, 21, 14, 10]),
-    ("the secure world", "phases 5 and 6: Trusty, the comparison, the README", [142, 15, 76, 13]),
-    ("the review", "checking the claims, the deep read of lk, two blind reads", [329, 49, 42, 39]),
+    ("the secure world", "phases 5 and 6: Trusty, the comparison, the README", [156, 15, 78, 17]),
+    ("the review", "checking the claims, the deep read of lk, three blind reads, the polish", [468, 49, 62, 54]),
 ]
 
 out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
@@ -59,6 +59,6 @@ for j, (kind, colour) in enumerate(KINDS):
 total = sum(sum(r[2]) for r in ROWS)
 rea = sum(r[2][1] for r in ROWS)
 fig.text(0.02, 0.01, f"{total} tool calls in all, {rea} of them REA. counted from the sessions' transcripts "
-         "at about 5:56 PM on 20 Nov 2026, with two sessions still going.", fontsize=9, color=MUTED)
+         "at about 7:46 PM on 20 Nov 2026, with one session still going.", fontsize=9, color=MUTED)
 fig.savefig(out, bbox_inches="tight", pad_inches=0.3)
 print(out)
