@@ -150,7 +150,7 @@ Finish line: the power-on diagram has no grey box between the SPL and `lk`.
 ## Phase 12 - deeper into Trusty
 
 - [ ] The key derivation behind the unlock token (`0xffffffffe0053b00`): which hardware key, which KDF. Until then "tied to the chip" is the label's word
-- [ ] The nine trusted apps behind the kernel: which blob is which
+- [x] The nine trusted apps behind the kernel: which blob is which. 21 Nov, by UUID, source paths and ports: gatekeeper, an IPC unit-test server, hwcrypto, storage, keymaster, kernelbootcp (the modem-side boot checker), factory provisioning with SOTER, a GlobalPlatform API server, and Widevine's OEMCrypto
 - [ ] The rest of the command switch: the RPMB and efuse handlers, and the password check on `0x32`
 - [ ] Picture: the secure-world diagram with the hardware-key box filled
 
@@ -161,7 +161,7 @@ Finish line: the secure world's *not read* line is down to things that need the 
 Small, separate, and none blocks another.
 
 - [ ] `grd_fw.img`: what it is, and whether it's encrypted or only compressed. 21 Nov: two payloads, no compression header, random-looking in most 4 KiB windows, so still undecided. Its header carries `0x0502`, the same number as the stock tablet's `ro.security.grdm_status` `FW_VER:0502`, a lead on what it is
-- [ ] The `teecfg` table and the Cortex-M4 image, both still at sizing level
+- [x] The `teecfg` table and the Cortex-M4 image, both still at sizing level. 21 Nov: `teecfg` is a list of named key slots plus one split public key; the M4 runs ThreadX with the GNSS firmware and a sensor hub. The slot contents weren't decoded
 - [ ] Whether Samsung's published kernel source builds into this exact kernel, and where the `-29056031-abX200XXS6DYG6` part of its version comes from. So far: the running config matches the defconfig on all 4,083 entries, and the suffix comes from a `localversion` file in the build directory or a build-time `LOCALVERSION`. No build has been run
 - [ ] Android's own `checkvintf` run on the vendor and the GSI, and the per-HAL rows compared
 - [ ] The SELinux policy as the tablet runs it under LineageOS, pulled off the device. The read so far is the stock vendor's

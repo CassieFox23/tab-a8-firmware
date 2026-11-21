@@ -139,6 +139,11 @@ The BL bundle has seven files. First comes a sizing pass over all of them: heade
 
 The "what it is" column is names and strings only. A string in a file isn't proof the code behind it runs.
 
+Two of them, a step past sizing (21 Nov 2026):
+
+- **`teecfg`** is a list of named slots after `TEE_CONFIG_HEADER`: `duk_key`, `ta_cipher`, `google_key`, `dpks_key`, `widevine_key`, `kce_key`, `pkf_key`, `miracast_key`, `ifaa_key`, `firewall`, `override_static_ta` and `wifionly`, then one public key stored as base64 in parts (`pubkey_part0` onward). Almost all of the rest is zeros. Which slots hold anything, and how Trusty reads them, wasn't read
+- **The Cortex-M4 image** runs ThreadX (`RTOS/source/src/c/threadx_mem.c`) and carries two jobs: the GNSS (satellite positioning) firmware (`GNSS_FirmwareEntry`, `SPRD-AP_FIRMWARE VERSION: BB %s FL %s`, week-rollover checks for GPS, Galileo, GLONASS and BeiDou) and a sensor hub (`[SENSORHUB]`, `shub_sbuf`). It starts with code, a Thumb `ldr sp` from a literal (`df f8 0c d0`), not a Cortex-M vector table. It's `pm_sys`, the partition Trusty's boot checker reads after boot
+
 The numbers come from one script:
 
 ```
@@ -574,7 +579,7 @@ The A10e ran Samsung's TEEGRIS. This tablet runs **Trusty**, Google's little-ker
 ### Which TEE, from the files
 
 - The kernel's `gta8wifi_eur_open_defconfig` has `CONFIG_TRUSTY=y`, `CONFIG_TRUSTY_LOG=y`, `CONFIG_TRUSTY_VIRTIO=y` and `CONFIG_DRM_SPRD_GSP_IPC_TRUSTY=y`, and `# CONFIG_TEE is not set` (so no OP-TEE). There's no `CONFIG_TZDEV`, which is what TEEGRIS needs. `lk` has 49 lines with `trusty` in any case (`strings -n 8`) and none with `teegris`.
-- On a running stock tablet (kernel log, 21 Nov 2026), the kernel reports `trusty version: sharkl5pro, Built: 01:24:05 Oct 24 2023`, the same build as the file. It reserves memory at `0x94000000` (`sml-mem`) and `0x94040000` (`tos-mem`, 95 MiB), matching where the SPL puts `sml` and `teecfg`. And it finds PSCI 1.0 behind `smc` calls, which fits `sml` being the BL31 monitor. After Android starts, a vendor service asks Trusty to check images again (`TrustyKernelBootcp: kernel_bootcp_verify_all`). Trusty's own log then shows it loading `vbmeta` and `pm_sys`'s footer and running `load_and_verify_vbmeta` itself. So one of the trusted apps is a boot checker that runs after boot. Which blob it is wasn't read
+- On a running stock tablet (kernel log, 21 Nov 2026), the kernel reports `trusty version: sharkl5pro, Built: 01:24:05 Oct 24 2023`, the same build as the file. It reserves memory at `0x94000000` (`sml-mem`) and `0x94040000` (`tos-mem`, 95 MiB), matching where the SPL puts `sml` and `teecfg`. And it finds PSCI 1.0 behind `smc` calls, which fits `sml` being the BL31 monitor. After Android starts, a vendor service asks Trusty to check images again (`TrustyKernelBootcp: kernel_bootcp_verify_all`). Trusty's own log then shows it loading `vbmeta` and `pm_sys`'s footer and running `load_and_verify_vbmeta` itself. So one of the trusted apps is a boot checker that runs after boot: `kernelbootcp`, the sixth blob in the table below
 - `tos-sign.bin`'s body is the Trusty TOS: a little-kernel image (`welcome to lk/MP`, `lk/trusty/lib/trusty/smcall.c`, `Initializing Trusted OS SMC handler`) built `sharkl5pro, Built: 01:24:05 Oct 24 2023`, with nine packed 32-bit ELF blobs behind the kernel. Their `com.android.trusty.*` strings name keymaster(.secure), gatekeeper, the storage clients and proxy, rpmb.bl, storage_auth.rpmb, hwkey, hwrng, kernelbootcp and oemcrypto(.secure)/Widevine. That's more names than blobs, and a name in a string isn't proof of a running app.
 - `sml-sign.bin` is ARM Trusted Firmware's BL31 with the Trusty dispatcher (`NOTICE:  BL31: %s`, `trusty_fast`). So the stack is lk (normal world) → BL31 monitor at EL3 (sml) → Trusty TOS (tos), the usual Trusty layout.
 
@@ -585,6 +590,20 @@ strings -n 8 tos.body | grep -E 'com\.android\.trusty\.|welcome to lk|Built:'
 ```
 
 The TOS body splits like `lk` did: the Trusty kernel is the first ~752 KiB (AArch64), then nine packed 32-bit ARM ELF trusted apps start at body offset `0xbc000`. Only the kernel part was carved out and read (`head -c 770048 tos.body > tos-kernel.body`; that's `0xbc000` bytes). It loads at `0xffffffffe0000000`, pinned the same two ways as `lk`.
+
+The nine apps (21 Nov 2026). Each one's size comes from its own ELF header, and its UUID is the first 16 bytes of its `.trusty_app.manifest` section. What each one is comes from its source paths and port names, so read the names as labels, not a read of the code:
+
+| Body offset | Size | UUID | What it is |
+|---|---|---|---|
+| `0xbc000` | 68 KiB | `38ba0cdc-df0e-11e4-9869-233fb6ae4795` | Gatekeeper (`com.android.trusty.gatekeeper`), the screen-lock password check |
+| `0xce000` | 40 KiB | `fee67f9f-e1b1-4e3d-8455-047f6001afef` | An IPC unit-test server (`ipc-unittest-srv`). Test code left in a shipping build |
+| `0xd9000` | 32 KiB | `df8ec70d-bb93-4b7b-ab88-72dfd3f33953` | Hardware crypto: the `hwkey` and `hwrng` services, plus a test key port |
+| `0xe2000` | 192 KiB | `cea8706d-6cb4-49f3-b994-29e0e478bd29` | Secure storage (`app/storage/`), backed by RPMB |
+| `0x113000` | 904 KiB | `5f902ace-5e5c-4cd8-ae54-87b88c22ddaf` | Keymaster (`app/keymaster/`) |
+| `0x1f6000` | 36 KiB | `32305457-0001-0002-5365-63426f6f7400` | The boot checker for the modem side, `com.android.trusty.kernelbootcp`. Its UUID ends in the ASCII for `SecBoot`. Its strings: `kbc_verify_all`, `kbc_unlock_ddr`, firewall lock and unlock for the modem's memory, and image versions through `sprdimgversion`. This is the one the stock tablet's log shows checking `vbmeta` and `pm_sys` after Android starts, asked by the modem control service |
+| `0x200000` | 384 KiB | `10259fa6-d64d-11e6-918b-3b2c3abe2b31` | Factory provisioning: `Production_write_keybox`, `trusty_production`, and keys for SOTER (`com.android.trusty.secure.soter`, Tencent's biometric sign-in) |
+| `0x261000` | 344 KiB | `1c558f47-9965-4714-9fd9-9a8ed9b1f0d9` | A GlobalPlatform TEE API server (`app/gpapi-server/`) with its own storage proxy |
+| `0x2b8000` | 592 KiB | `81af0b44-41f0-11e7-a919-92ebcb67fe33` | Widevine's OEMCrypto (`app/oemcrypto/`), the part behind the `L1` a stock tablet reports |
 
 ### What Trusty does with lk's two commands
 
@@ -601,7 +620,7 @@ python3 tools/a64_refs.py tos-kernel.body 0xffffffffe0000000 \
 
 This answers the question the `lk` read left open, "what does Trusty do with `0x20` and `0x33`": `0x33` checks an unlock token it computes for itself, tied to the chip if its key label means what it says, and `0x20` is libavb. It was read with Ghidra through REA, named by address, for a handful of functions, not the whole TOS.
 
-*Not read:* The key-derivation primitive itself (which hardware key, which KDF), the nine trusted apps packed behind the kernel, and what BL31 in `sml` does between the `smc` and the TOS.
+*Not read:* The key-derivation primitive itself (which hardware key, which KDF), what the nine trusted apps do inside (they're named in the table above, not read), and what BL31 in `sml` does between the `smc` and the TOS.
 
 ### What the running OS lets near it
 
