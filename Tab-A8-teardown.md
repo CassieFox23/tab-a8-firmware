@@ -476,7 +476,7 @@ What `vbmeta.img` says, read with `avbtool info_image --image vbmeta.img`:
 
 `vbmeta_system.img` is signed with the same key and carries the same three hashtrees again (`system`, `vendor`, `product`). The main vbmeta has no chain entry pointing at it.
 
-It doesn't need one, because Android's first-stage init asks for it by name. The stock boot ramdisk carries its own `fstab.ums512_25c10`, and its mount lines say which vbmeta checks what:
+It may not need one, because the fstab names it. The stock boot ramdisk carries its own `fstab.ums512_25c10`, and its mount lines name a vbmeta for each logical partition:
 
 ```
 system   /system  ext4  ro  wait,avb=vbmeta_system,logical,first_stage_mount,avb_keys=/avb/q-gsi.avbpubkey:/avb/r-gsi.avbpubkey:/avb/s-gsi.avbpubkey
@@ -488,7 +488,9 @@ product  /product ext4  ro  wait,avb=vbmeta,logical,first_stage_mount
 gzip -dc boot/unpacked/ramdisk | cpio -id fstab.ums512_25c10 init
 ```
 
-So `system` is checked against `vbmeta_system`, `vendor` against `vbmeta_vendor`, and `product` against the main vbmeta. A copy of the same fstab sits in `/vendor/etc/` (read off the stock tablet, 21 Nov 2026), but it differs: its `vendor` and `product` lines say plain `avb`. First-stage init mounts `/vendor` itself, so it can't be reading the copy inside it. That's reasoning, not a read of init's code.
+So the fstab names `vbmeta_system` for `system`, `vbmeta_vendor` for `vendor`, and the main vbmeta for `product`. What Android's `fs_mgr` does with those names wasn't read: whether it checks the partition against that vbmeta, or only waits for it. The main vbmeta already carries all three hashtrees, so this doesn't show `vendor` is checked against `vbmeta_vendor`.
+
+A copy of the same fstab sits in `/vendor/etc/` (read off the stock tablet, 21 Nov 2026), but it differs: its `vendor` and `product` lines say plain `avb`. The device tree has no fstab node (only `/firmware/android/vbmeta` with its list of partitions), and first-stage init mounts `/vendor` itself, so the ramdisk copy is the one it can read. That's reasoning, not a read of init's code.
 
 What's on a real tablet's `vbmeta_vendor` partition wasn't read: no bundle ships an image for it, `lk` logs it as skipped, and shell can't read the block device. The `avb_keys` on the `system` line name Google's GSI keys, but the ramdisk has no `/avb/` folder with them in it.
 
@@ -626,7 +628,7 @@ strings -n 8 boot/unpacked/kernel | grep -m1 '^Linux version'
 
 Samsung's published source for this build is the same `4.14.199` (its `Makefile`: `VERSION = 4`, `PATCHLEVEL = 14`, `SUBLEVEL = 199`) and has a `gta8wifi_eur_open_defconfig`. The `-29056031-abX200XXS6DYG6` part of the version isn't in that defconfig (`CONFIG_LOCALVERSION=""`).
 
-The running kernel's own config, read off a stock tablet's `/proc/config.gz` (21 Nov 2026), matches that defconfig line for line: all 4,083 entries agree and none are missing. The defconfig compared, `scripts/setlocalversion` and the `Makefile` are byte for byte the ones in Samsung's own `Kernel.tar.gz` (sha256), so the match isn't against a copy rebuilt from a tablet. The source has no `localversion` file, and the config leaves `CONFIG_LOCALVERSION` empty with `CONFIG_LOCALVERSION_AUTO` off. By `scripts/setlocalversion`, that leaves one input for the suffix: a `LOCALVERSION` variable set when the kernel was built. Samsung's build setup itself wasn't seen.
+The running kernel's own config, read off a stock tablet's `/proc/config.gz` (21 Nov 2026), matches that defconfig line for line: all 4,083 entries agree and none are missing. The defconfig compared, `scripts/setlocalversion` and the `Makefile` are byte for byte the ones in Samsung's own `Kernel.tar.gz` (sha256), so the match isn't against a copy rebuilt from a tablet. The source has no `localversion` file, and the config leaves `CONFIG_LOCALVERSION` empty with `CONFIG_LOCALVERSION_AUTO` off. By `scripts/setlocalversion`, that leaves two inputs for the suffix: a `localversion` file in the build directory, if the kernel was built outside the source tree, or a `LOCALVERSION` variable set when it was built. Samsung's build setup wasn't seen.
 
 *Not read yet:* Whether that source builds into this exact kernel.
 
