@@ -569,7 +569,7 @@ strings -n 8 boot/unpacked/kernel | grep -m1 '^Linux version'
 
 Samsung's published source for this build is the same `4.14.199` (its `Makefile`: `VERSION = 4`, `PATCHLEVEL = 14`, `SUBLEVEL = 199`) and has a `gta8wifi_eur_open_defconfig`. The `-29056031-abX200XXS6DYG6` part of the version isn't in that defconfig (`CONFIG_LOCALVERSION=""`).
 
-The running kernel's own config, read off a stock tablet's `/proc/config.gz` (21 Nov 2026), matches that defconfig line for line: all 4,083 entries agree and none are missing. The source has no `localversion` file, and the config leaves `CONFIG_LOCALVERSION` empty with `CONFIG_LOCALVERSION_AUTO` off. By `scripts/setlocalversion`, that leaves one input for the suffix: a `LOCALVERSION` variable set when the kernel was built. Samsung's build setup itself wasn't seen.
+The running kernel's own config, read off a stock tablet's `/proc/config.gz` (21 Nov 2026), matches that defconfig line for line: all 4,083 entries agree and none are missing. The defconfig compared, `scripts/setlocalversion` and the `Makefile` are byte for byte the ones in Samsung's own `Kernel.tar.gz` (sha256), so the match isn't against a copy rebuilt from a tablet. The source has no `localversion` file, and the config leaves `CONFIG_LOCALVERSION` empty with `CONFIG_LOCALVERSION_AUTO` off. By `scripts/setlocalversion`, that leaves one input for the suffix: a `LOCALVERSION` variable set when the kernel was built. Samsung's build setup itself wasn't seen.
 
 *Not read yet:* Whether that source builds into this exact kernel.
 

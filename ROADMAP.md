@@ -128,7 +128,7 @@ The boot path was read. These are the pieces beside it.
 - [ ] The second Knox Guard check, `0x9f038880`, and the second user of the flash-block message, `0x9f0179a0`
 - [ ] The other callers of command `0x20`: `0x9f1208b0` on `pm_sys`, `0x9f123d88`, and which images come through the loader `0x9f00ef18`
 - [ ] The three calls on the unlocked path that most likely draw the startup warning
-- [ ] The second `smc` at `0x9f143d40`, the 18 branches into `0x9f010c48`, what `grdm` is, and the warranty bit. Leads, not answers: `lk` adds `androidboot.grdm_status=%s` and has the line `GRDM BL Auth key derived from SHK on UNISOC LK`, and a stock tablet reports `FW_VER:0502`. `warranty_bit` read `0` both locked and unlocked
+- [ ] The second `smc` at `0x9f143d40`, the 18 branches into `0x9f010c48`, what `grdm` is, and the warranty bit. Leads, not answers: `lk` adds `androidboot.grdm_status=%s` (a stock tablet's command line has `NORMAL`) and has the line `GRDM BL Auth key derived from SHK on UNISOC LK`. A separate property, `ro.security.grdm_status`, reads `FW_VER:0502`; what sets that one wasn't read. `warranty_bit` read `0` both locked and unlocked
 - [ ] The 74 pictures packed in the file
 - [ ] Picture: the unlock diagram with its grey boxes filled
 
