@@ -4,6 +4,8 @@ the read is in: the things you can read straight off the stock firmware without 
 
 the read is static - files unpacked and read on a PC, with none of the firmware's code run. where something was seen on the real tablets it says so, and it comes from the flash logs behind the [how-to](docs/lineageos-howto.md).
 
+if a word stops you - PIT, DHTB, `smc`, TEE - it's probably in [words used here](#words-used-here).
+
 ## the device
 
 | | |
@@ -48,7 +50,7 @@ tar -tvf BL_*.tar.md5        # same for AP, CSC, HOME_CSC
 
 ![the partitions in on-disk order on a log scale (57 of the 58 are drawn - `userdata` has no size in the PIT), coloured by which firmware bundle ships an image for each](figures/partition-map.png)
 
-the PIT has 58 entries, all on the eMMC, project name `COM_TAR2`, CPU/bootloader tag `SPRD8735`. the full table is in [`docs/partition-map.md`](docs/partition-map.md).
+the PIT (Samsung's partition table file, shipped in the CSC bundle) has 58 entries, all on the eMMC, project name `COM_TAR2`, CPU/bootloader tag `SPRD8735`. the full table is in [`docs/partition-map.md`](docs/partition-map.md).
 
 the PIT ties each BL file to a partition, which is the first real hint of what the bootloader pieces are:
 
@@ -90,6 +92,34 @@ no addresses, just the story. everything here is backed by a section further dow
 ![what happens when you press power: the first loader loads and checks the next stages against a key hash it carries, tries the backup copies before giving up, and jumps to sml; how control gets from sml and Trusty to lk wasn't read; lk asks the secure world whether the unlock record is genuine; unlocked skips the image check and goes orange, locked sends the boot image to the secure world and gets green, yellow or red; lk's own libavb check always runs but only feeds the command line; green and yellow boot, orange waits and then boots, red drops to Download Mode and, in the code as read, stays there](figures/power-on.png)
 
 the same story as one flow. grey boxes are things that weren't read. the interactive page is in `.archify/workflow-tab-a8-power-on-20261120-172500/`.
+
+### words used here
+
+short meanings, as this page uses them.
+
+| word | what it means here |
+|---|---|
+| BL, AP, CSC | the bundles a Samsung firmware comes in: the bootloader files, the Android images, and the region pack |
+| PIT | Samsung's partition table file: one entry per partition, with its name and size |
+| Download Mode, Odin | Samsung's flashing mode, and the protocol a PC uses to talk to it |
+| SPL | the first small loader in the bundle (`u-boot-spl-16k-sign.bin`). it loads and checks the next stages |
+| `lk` | "little kernel", the small open-source kernel the main bootloader is built on. Trusty is built on it too, so both files greet with `welcome to lk` |
+| DHTB | the four letters each signed bootloader file starts with, used here as the name of that container. the files don't say what they stand for |
+| secure world, TEE | a second small system on the same chip that the normal one can't see into. TEE is "trusted execution environment". this tablet's is Trusty |
+| TOS | the "trusted OS" file, `tos-sign.bin` - Trusty's kernel and its apps |
+| `sml`, BL31 | `sml-sign.bin` holds BL31, the piece of ARM Trusted Firmware that sits between the normal world and the secure one and passes calls across |
+| `smc` | "secure monitor call", the ARM instruction normal-world code uses to call into the secure world |
+| AVB, vbmeta, libavb | Android Verified Boot. `vbmeta` is its signed table of hashes and keys, and libavb is Google's code that checks it |
+| chained partition | a partition that carries its own signed vbmeta footer. the main vbmeta only names the key that footer must be signed with |
+| hashtree, dm-verity | a tree of hashes over a whole partition. the kernel's dm-verity checks each block against it as the block is read |
+| Knox Guard (KG) | Samsung's remote lock for a device. `lk` keeps a KG state and looks at it before it allows an unlock or a flash |
+| RPMB | a small area of the eMMC that only takes writes authenticated with a key, used for secure storage |
+| Treble, VINTF | Android's split between the system and the vendor's code, and the files in which each side declares what it offers and needs |
+| GSI | generic system image: one Android system build made to run on many Treble devices |
+| HAL | a vendor service that sits between Android and a piece of hardware |
+| ADRP | an ARM64 instruction that loads the address of a memory page. code uses it to point at strings and data, which is how the scripts find references |
+
+### the sizing pass
 
 the BL bundle has seven files. first comes a sizing pass over all of them - headers, hashes, signatures, entropy and strings, with nothing disassembled. it settled more than expected, because the files check each other with plain hashes. the read of the code in `lk` and the SPL starts at [pinning the load addresses](#pinning-the-load-addresses).
 
@@ -170,7 +200,7 @@ the signature is RSASSA-PSS (SHA-256, 32-byte salt) over the bytes from the body
 - `lk`'s certificate is also type `1`, and the hash it carries is `a406eeb5ebc0...` - the SHA-256 of the AVB public key in `vbmeta.img`. so the **signed bootloader names the one vbmeta key it goes with**.
 - that AVB key then signs `vbmeta.img` and the chained partitions, as in the next section. the Cortex-M4 image is one of them: it has no DHTB wrapper, just an AVB footer for `pm_sys` signed by the same key.
 
-so the question from the first pass - where does the bootloader keep the key it trusts - has a first answer without reading any code: the vbmeta key's hash rides in `lk`'s own signed certificate.
+so the question the read started with - where does the bootloader keep the key it trusts - has a first answer without reading any code: the vbmeta key's hash rides in `lk`'s own signed certificate.
 
 the full key ids are SHA-256 values: key A `29f0d80a5959c8513e45c56596d3ff31d21713352706e0e1844fc8d2a17dfc29`, key B `3ca58836d04d90a9acff83ae763a085ca6c50d2444784042aa731e7b0eeaeffd`, AVB key blob `a406eeb5ebc07a5cafabdb1bf2f4ad74275a533f67cc68e680345d22ddc66cef`.
 
@@ -226,9 +256,9 @@ every address the read turned up, on one line. a bar is a size that was read, a 
 python3 tools/memory_map_chart.py
 ```
 
-everything below is Ghidra's decompiler output (through [REA](https://github.com/morluto/rea)) for a handful of functions, named by address. it's a read of the paths that answer the open questions, not of the whole bootloader.
-
 ### what the SPL does
+
+from here to the end of the boot chain, the read is Ghidra's decompiler output (through [REA](https://github.com/morluto/rea)) for a handful of functions, named by address. it's a read of the paths that answer the open questions, not of the whole bootloader.
 
 one function, at `0xf898`, does the loading:
 
@@ -315,7 +345,7 @@ the number becomes a colour in `0x9f007a38`, which switches on the state and add
 | `3` | `androidboot.verifiedbootstate=red` |
 | `0`, or anything else | `androidboot.verifiedbootstate=green` |
 
-green is the fallback, so a state number the code doesn't know would also report green. (`tools/a64_refs.py` reports this function as starting at `0x9f007a3c`; Ghidra has `0x9f007a38`.)
+green is the fallback, so a state number the code doesn't know would also report green. (for four functions `tools/a64_refs.py` reports a start four bytes later than Ghidra does: this one as `0x9f007a3c`, and `0x9f1281e4`, `0x9f11f9a4` and `0x9f010990` for three further down. the addresses on this page are Ghidra's.)
 
 there's a near-twin, `0x9f1206d0`, with the same shape (footer, load vbmeta, command `0x20`, set `0x9f435010`) but a slightly different mapping (its locked-`5` goes to `3`, not `1`). nothing was found calling it - no `bl`/`b`, no `ADRP`+`ADD`, not stored as data - so it reads like a dead or alternate copy, and the live numbers above are `0x9f120b00`'s.
 
@@ -327,7 +357,7 @@ there's a near-twin, `0x9f1206d0`, with the same shape (footer, load vbmeta, com
 - `0x9f124e64` turns on "allow verification errors" when a flag at `0x9f9af000` is `0` and the unlock check (`0x9f121324`) says unlocked, logging `avb allow verification error in UNLOCK status while normal booting`
 - but `0x9f11f9a0` only logs `avb_check_image`'s return and builds the kernel cmdline from it; in what Ghidra shows that return isn't acted on (it flags a terminal call at `0x9f11fac8`, so the tail may be cut). so `lk`'s libavb feeds the kernel command line, while the **boot-state gate is the secure-world `0x20` check above**. a scan for stores to the state global finds them in three functions only, all of them `0x20` callers (the scan matches one instruction shape, so a store written another way would be missed): `0x9f120b00`, `0x9f1208b0` and the uncalled `0x9f1206d0`
 
-the libavb names are its own, from each function's log strings. Ghidra starts two of them four bytes earlier than `tools/a64_refs.py` does (`0x9f1281e0`/`0x9f11f9a0` vs `0x9f1281e4`/`0x9f11f9a4`).
+the libavb names are its own, from each function's log strings.
 
 **command `0x20` has four callers.** two are on the boot path read here: `0x9f120b00`, and `0x9f1208b0`, which `0x9f010c48` calls on `pm_sys` (the Cortex-M4 image) under a flag - that one wasn't read through. `0x9f120b00` has a third call site besides the two above, at `0x9f00efe4`. it's in `0x9f00ef18`, a general image loader (`load %s with backup img %s` is one of its log lines): given a name, a size and a destination, it sends any image that isn't `pm_sys` and has no backup copy through `0x9f120b00`, then copies it from `0x9a000000` to where it belongs. which images come through that loader wasn't read. the other two callers are `0x9f123d88` (`check vbmeta image.`, by its string only - `0x9f123c24` uses the same string) and the uncalled twin `0x9f1206d0`.
 
@@ -359,7 +389,7 @@ python3 tools/a64_refs.py lk.body 0x9f000000 "SECUREBOOT_ENABLE" "Device Status 
 an earlier pass of this page listed a fourth reader, `0x9f014508`. that was wrong: it reads offset `0x10` of the boot image header, which sits in the same memory page at `0x9f435aa0`.
 
 ```
-python3 tools/a64_refs.py lk.body 0x9f000000 "WARNNING: OEM KEY" "WARNNING: USER KEY" "start Odin Mode"   # reports the function as 0x9f010990, Ghidra as 0x9f01098c
+python3 tools/a64_refs.py lk.body 0x9f000000 "WARNNING: OEM KEY" "WARNNING: USER KEY" "start Odin Mode"
 ```
 
 the other two were found by scanning for loads of `0x9f435010` and then decompiled; their log strings are built in ways `a64_refs.py` doesn't follow.
@@ -385,7 +415,7 @@ the other two were found by scanning for loads of `0x9f435010` and then decompil
 
 the A10e column is from its [teardown](https://github.com/CassieFox23/a10e-firmware/blob/master/A10e-teardown.md).
 
-the big difference is where the decisions sit. on the A10e they're in the bootloader you can read. here the bootloader asks the secure world about both: the unlock state, and the vbmeta check whose answer sets the boot state. `lk` runs its own libavb too, but that feeds the kernel cmdline - the orange/green/red gate and the root of trust both come from the secure-world check. what's behind the `smc` belongs to [the secure world](#the-secure-world).
+the big difference is where the decisions sit. on the A10e they're in the bootloader you can read. here the bootloader asks the secure world about both: the unlock state, and the vbmeta check whose answer sets the boot state. `lk` runs its own libavb too, but that feeds the kernel cmdline - the orange/green/red gate comes from the secure-world check. what's behind the `smc` belongs to [the secure world](#the-secure-world).
 
 one thing the firmware does say: the vendor's `default.prop` has `ro.oem_unlock_supported=1`. the A10e had that same line and still wouldn't unlock, so on its own it settles nothing.
 
@@ -411,7 +441,7 @@ one thing seen on the real tablets, from the flash logs in the [how-to](docs/lin
 
 the hash of this key is carried in the bootloader's own signed certificate - see [the chain, from the hashes](#the-chain-from-the-hashes).
 
-the code behind that is in [what lk does about verified boot](#what-lk-does-about-verified-boot): when the tablet is unlocked, the boot state is set without looking at the check's result.
+the code behind that is in [what lk does about verified boot](#what-lk-does-about-verified-boot): when the tablet is unlocked, the secure-world check on the boot image is skipped and the boot state is set to orange without it.
 
 and a failed check while **locked** ends in Download Mode - the same section has the read.
 
@@ -475,10 +505,10 @@ the TOS body splits like `lk` did: the Trusty kernel is the first ~752 KiB (AArc
 
 ### what Trusty does with lk's two commands
 
-`lk` reaches the secure world with an `smc #0` whose function id is `0xb4000020` and whose second argument word is the command (phase 4's "command `0x33`/`0x20`"). in the TOS, one handler takes those - `sprdsec`'s `process_sip_call` at `0xffffffffe004256c` - and switches on that command word. it checks the id is `0xb4000020` first, then:
+`lk` reaches the secure world with an `smc #0` whose function id is `0xb4000020` and whose second argument word is the command - the "command `0x33`" and "command `0x20`" of the `lk` sections above. in the TOS, one handler takes those - `sprdsec`'s `process_sip_call` at `0xffffffffe004256c` - and switches on that command word. it checks the id is `0xb4000020` first, then:
 
 - **command `0x33` - the unlock record (`FUNCTYPE_CHECK_LOCK_STATUS`).** it maps the 64-byte record `lk` read out of `miscdata`, computes its own expected 64 bytes, compares the two, and writes `1` into the buffer at offset `0x40` on a match (`unlock status is matched, return unlock.`) or `0` on a miss. the expected bytes come from `0xffffffffe0041d74`: derive a key with the label `VerifiedBoot-HUK-DERIVE` (through `0xffffffffe0053b00`, which wasn't read), then AES-CBC the label `VerifiedBoot-UNLOCK` under it. so the unlock record isn't a flag `lk` trusts - it's a token the secure world computes for itself and compares. going by that label, the key comes from the chip's hardware key, which would tie the token to this one tablet and mean planting bytes in `miscdata` can't forge it. that last step is the label's word, not the code's: the routine that derives the key wasn't read.
-- **command `0x20` - vbmeta (`avb_slot_verify`).** the handler at `0xffffffffe0072a5c` runs libavb inside the TEE: its callees are the AVB slot-verify path (`### enter avb_slot_verify. ###`, `avb_slot_verify result is %d`, `external/lk/platform/sprd/secureboot/sprd/avb/tos_avb_api.c`). so the vbmeta check phase 4 saw `lk` hand to the secure world really does run there, as a full `avb_slot_verify`, and the result comes back. this is the secure world's half, not proof `lk` trusts only it: `lk` checks vbmeta's signature with its own libavb as well (see [what lk does about verified boot](#what-lk-does-about-verified-boot)), and the boot state is set from this command's answer, in `0x9f120b00`; `lk`'s own check feeds the kernel command line, with the caveat given there that Ghidra may have cut that function's tail.
+- **command `0x20` - vbmeta (`avb_slot_verify`).** the handler at `0xffffffffe0072a5c` runs libavb inside the TEE: its callees are the AVB slot-verify path (`### enter avb_slot_verify. ###`, `avb_slot_verify result is %d`, `external/lk/platform/sprd/secureboot/sprd/avb/tos_avb_api.c`). so the vbmeta check `lk` was seen handing to the secure world really does run there, as a full `avb_slot_verify`, and the result comes back. this is the secure world's half, not proof `lk` trusts only it: `lk` checks vbmeta's signature with its own libavb as well (see [what lk does about verified boot](#what-lk-does-about-verified-boot)), and the boot state is set from this command's answer, in `0x9f120b00`; `lk`'s own check feeds the kernel command line, with the caveat given there that Ghidra may have cut that function's tail.
 - the same switch carries the rest of the secure plumbing: `0x31` runs a caller's buffer through the same keyed step, `0x30` only logs and returns an error in this build, `0x32` checks a password through a different routine (`0xffffffffe0041f20`), `0x40` takes the chip id handed over by the bootloader (its log line starts `from uboot smc(set chip uid)`), and a spread of `0x21`-`0x26` and `0x34`-`0x36` handlers for RPMB and efuse.
 
 ```
@@ -486,7 +516,7 @@ python3 tools/a64_refs.py tos-kernel.body 0xffffffffe0000000 \
     "FUNCTYPE_CHECK_LOCK_STATUS" "VerifiedBoot-UNLOCK" "VerifiedBoot-HUK-DERIVE" "enter avb_slot_verify"
 ```
 
-this is the answer to phase 4's open question "what does Trusty do with `0x20` and `0x33`": `0x33` checks an unlock token it computes for itself - tied to the chip if its key label means what it says - and `0x20` is libavb. read with Ghidra through REA, named by address, a handful of functions - not the whole TOS.
+this answers the question the `lk` read left open, "what does Trusty do with `0x20` and `0x33`": `0x33` checks an unlock token it computes for itself - tied to the chip if its key label means what it says - and `0x20` is libavb. read with Ghidra through REA, named by address, a handful of functions - not the whole TOS.
 
 *not read:* the key-derivation primitive itself (which hardware key, which KDF), the nine trusted apps packed behind the kernel, and what BL31 in `sml` does between the `smc` and the TOS.
 
