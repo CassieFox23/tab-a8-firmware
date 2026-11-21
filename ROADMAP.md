@@ -81,4 +81,4 @@ Finish line: the secure world row of the comparison is filled.
 
 - [x] A blind read of the whole thing by a reviewer who wasn't in the room, two of them: one on the whole repo, one on the fixes and the new diagrams
 - [x] Fixes from that read
-- [ ] Repo goes public, Discussions on, the how-to gets its thread
+- [x] Repo goes public, Discussions on, the how-to gets its thread
