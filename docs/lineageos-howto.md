@@ -233,6 +233,7 @@ So it's Android 15 on top of the stock kernel. The vendor partition is the stock
 
 ## After it boots
 
+- **This GSI line has stopped.** `22.2-20260105` is the last 22.2 build from MisterZtr (its notes say December 2025 security patch), so a tablet on it stays at that patch level. The same project moved to LineageOS 23 (Android 16): `23.0` on 9 Jan 2026 (January patch), then `23.2` builds from 18 Apr (April patch) to 24 May 2026 (the 7 May build says May patch). The 24 May build's notes add "support for Android 11 vendors", and its one matching commit enables VNDK 30, which is Android 11's. This tablet's vendor is Android 11, so that's the first 23.x build likely to fit it. Nothing has been released since 24 May, and the repo has no issue tracker. No report of any 23.x build on an SM-X200 turned up (GitHub, reddit, web search; the XDA thread refused the fetch). All of this was read 21 Nov 2026 from the [GitHub releases](https://github.com/MisterZtr/LineageOS_gsi/releases).
 - **The launcher stutters at the native 1200x1920.** Frame stats (`dumpsys gfxinfo`) put about 80% of app-drawer frames as janky on one tablet and 76% on the other. Dropping the resolution to 98% took that to about 2%:
 
   ```

@@ -168,3 +168,15 @@ Small, separate, and none blocks another.
 - [x] Why `vbmeta_system` has no chain entry in the main vbmeta, and what the `vbmeta_vendor` partition is for, since no bundle ships an image for it. 21 Nov: the boot ramdisk's fstab names them with `avb=`, which in Android 11's source only makes init wait for those partitions; the hashtrees come from the main vbmeta, and the stock boot log shows that. What's on a real tablet's `vbmeta_vendor` wasn't read
 
 Finish line: each one is answered in the teardown or moved to its "what didn't work" section with what was tried.
+
+## Phase 14 - the field around it
+
+What the repo hadn't looked at: newer GSIs, the rescue path under Download Mode, what stays unpatched, and a few loose ends. Web research, checked against its sources.
+
+- [x] Newer GSIs and their patch levels (21 Nov). The 22.2 line ended at the January build the tablets run (December 2025 patch); 23.2 builds ran to 24 May 2026, the last one adding VNDK 30 for Android 11 vendors; no SM-X200 report on 23.x found. In the how-to's "After it boots"
+- [ ] A 23.2 build tried on a tablet, so there is an SM-X200 report
+- [ ] The rescue path under Samsung's Download Mode, if a flash or relock bricks a tablet
+- [ ] What a GSI tablet keeps unpatched: the vendor, kernel, bootloader, Trusty and firmware fixes published after Aug 2025
+- [ ] Loose ends: Knox Guard's values, how the Wi-Fi-only build shuts the modem down, what the rollback level would block, and mainline Linux on this chip
+
+Finish line: each box is answered with sources, or says what couldn't be found.
