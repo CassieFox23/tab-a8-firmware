@@ -165,7 +165,7 @@ orange
 
 `flash.locked` `0` and `orange` are the unlocked bootloader. The third line is `ro.boot.warranty_bit` as the tablet reported it. What sets it wasn't read, so don't take that `0` as proof of anything.
 
-For comparison, a third tablet still locked on stock `X200XXS6DYG6` answered `1`, `green`, `0` and `1` to the same line. So `warranty_bit` read `0` before an unlock as well as after.
+For comparison, a third tablet still locked on stock `X200XXS6DYG6` answered `1`, `green`, `0` and `1` to the same line. So `warranty_bit` read `0` before an unlock as well as right after it. One of the first two tablets, a month into LineageOS, reads `1` (21 Nov 2026), so something after the unlock set it. What, wasn't read.
 
 ## 6. Flash TWRP
 

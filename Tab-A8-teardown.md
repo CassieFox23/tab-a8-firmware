@@ -419,29 +419,29 @@ The other two were found by scanning for loads of `0x9f435010` and then decompil
 
 ### What lk hands the kernel
 
-The end of all this is a kernel command line. Shell can't read `/proc/cmdline` on stock, but a bugreport records it (the `Command line:` line near the top of the dumpstate text). Here it is off the third tablet, locked on stock `X200XXS6DYG6`, 21 Nov 2026. Each key below has a format string in `lk` (offsets are into `lk`'s body, from `strings -t x`). The line also carries the serial number, the chip ids, a device id, a unit number and a partition UUID. Those aren't printed here.
+The end of all this is a kernel command line. Shell can't read `/proc/cmdline` on stock, but a bugreport records it (the `Command line:` line near the top of the dumpstate text). Here it is off the third tablet, locked on stock `X200XXS6DYG6`, 21 Nov 2026. The unlocked column is one of the first two tablets the same day, a month into LineageOS. It's read from its `ro.boot.*` properties over ssh, which carry the same values as the command line, so only the keys Android keeps are there. Each key below has a format string in `lk` (offsets are into `lk`'s body, from `strings -t x`). The line also carries the serial number, the chip ids, a device id, a unit number and a partition UUID. Those aren't printed here.
 
-| Key | Locked, stock | Format string in `lk` | What else `lk`'s strings say |
-|---|---|---|---|
-| `verifiedbootstate` | `green` | four whole strings at `0x14c530`–`0x14c5a8`, one per colour | The colour table [above](#what-lk-does-about-verified-boot) |
-| `flash.locked` | `1` | `0x14c5f0` (and `=0` at `0x14c5d0`) | |
-| `vbmeta.device_state` | `locked` | `0x1a2618`, among libavb's strings | |
-| `vbmeta.digest` | `9574f014…49ba3` | `0x1a2658`, among libavb's strings | Matches the stock images, see [verified boot](#verified-boot) |
-| `vbmeta.size` | `29312` | `0x1a0428`, among libavb's strings | |
-| `veritymode` | `enforcing` | `0x1a26b8`, among libavb's strings | |
-| `secureboot` | `1` | `0x14d370`, `%d` | |
-| `warranty_bit` | `0` | `0x14e550`, `%d` | `set_warranty_fuse`, `Set Warranty Bit : %s`, and the Download Mode line `WARRANTY VOID : 0x%x (0x%x)`. So it's likely a fuse, but what sets it wasn't read. The two unlocked tablets also reported `0` |
-| `ulcnt` | `0` | `0x14e5c8`, `%d` | Nothing else. The name reads like an unlock count, but that's a guess until the unlocked tablet's line is read |
-| `rp` | `6` | `0x14e5e0` (`%s`) and `0x14e600` (`%d`) | `_check_rp_version`, and the Download Mode line `RP SWREV: B%d Kb%d,Kr%d,Dt%d,Vb%d,Vbs%d S%d`. Whether `6` is the `B` there is for the screen photo to show |
-| `svb.ver` | `SVB1.0` | `0x14e5a8`, with `SVB1.0` itself at `0x14e5c0` | `Display warning svb logo....` |
-| `kg` / `kg.bit` | `0x4` / `00` | `0x14e638` / `0x14e650` | The Download Mode line `KG STATUS : %s (%s)`. Android's own `knox.kg.state` reads `Completed` |
-| `grdm_status` | `NORMAL` | `0x14e618`, `%s` | `GRDM STATUS: %s(%s)` on the Download Mode screen, `GRDM BL Auth key derived from SHK on UNISOC LK`. A separate property, `ro.security.grdm_status`, reads `FW_VER:0502` |
-| `em.status` / `sb.debug0` | `0x0` / `0x0` | `0x14e4f0` / `0x14e510` | |
-| `fastbootd` | `false` | `0x14e530` | |
-| `hwlevel` | `MP` | `0x14d330` | |
-| `dtbo_idx` | `4` | `0x14cff0`, `%d` | The second `-25c10` overlay, see [the device](#the-device) |
+| Key | Locked, stock | Unlocked, LineageOS | Format string in `lk` | What else `lk`'s strings say |
+|---|---|---|---|---|
+| `verifiedbootstate` | `green` | `orange` | four whole strings at `0x14c530`–`0x14c5a8`, one per colour | The colour table [above](#what-lk-does-about-verified-boot) |
+| `flash.locked` | `1` | `0` | `0x14c5f0` (and `=0` at `0x14c5d0`) | |
+| `vbmeta.device_state` | `locked` | `unlocked` | `0x1a2618`, among libavb's strings | |
+| `vbmeta.digest` | `9574f014…49ba3` | the same | `0x1a2658`, among libavb's strings | Matches the stock images, see [verified boot](#verified-boot) |
+| `vbmeta.size` | `29312` | `29312` | `0x1a0428`, among libavb's strings | |
+| `veritymode` | `enforcing` | not read | `0x1a26b8`, among libavb's strings | |
+| `secureboot` | `1` | not read | `0x14d370`, `%d` | |
+| `warranty_bit` | `0` | **`1`** | `0x14e550`, `%d` | `set_warranty_fuse`, `Set Warranty Bit : %s`, and the Download Mode line `WARRANTY VOID : 0x%x (0x%x)`. So it's likely a fuse, but what sets it wasn't read. Both unlocked tablets read `0` right after the unlock in October. The one re-read here reads `1` a month later, so something after the unlock set it |
+| `ulcnt` | `0` | `0` | `0x14e5c8`, `%d` | Nothing else. The name reads like an unlock count, but the unlocked tablet reads `0` too, so it isn't one, or doesn't count this kind of unlock |
+| `rp` | `6` | not read | `0x14e5e0` (`%s`) and `0x14e600` (`%d`) | `_check_rp_version`, and the Download Mode line `RP SWREV: B%d Kb%d,Kr%d,Dt%d,Vb%d,Vbs%d S%d`. Whether `6` is the `B` there is for the screen photo to show |
+| `svb.ver` | `SVB1.0` | not read | `0x14e5a8`, with `SVB1.0` itself at `0x14e5c0` | `Display warning svb logo....` |
+| `kg` / `kg.bit` | `0x4` / `00` | `0x1` / `00` | `0x14e638` / `0x14e650` | The Download Mode line `KG STATUS : %s (%s)`. Android's own `knox.kg.state` reads `Completed` |
+| `grdm_status` | `NORMAL` | not read | `0x14e618`, `%s` | `GRDM STATUS: %s(%s)` on the Download Mode screen, `GRDM BL Auth key derived from SHK on UNISOC LK`. A separate property, `ro.security.grdm_status`, reads `FW_VER:0502` |
+| `em.status` / `sb.debug0` | `0x0` / `0x0` | not read | `0x14e4f0` / `0x14e510` | |
+| `fastbootd` | `false` | not read | `0x14e530` | |
+| `hwlevel` | `MP` | not read | `0x14d330` | |
+| `dtbo_idx` | `4` | `4` | `0x14cff0`, `%d` | The second `-25c10` overlay, see [the device](#the-device) |
 
-The same read off an unlocked tablet would fill in the other column: `flash.locked`, `ulcnt`, `warranty_bit`, `kg` and the digest after an unlock. That's for the third tablet's flash.
+The keys marked not read in the unlocked column need a bugreport off an unlocked tablet. The third tablet's flash is the chance, with a read right after the unlock and another after LineageOS boots, which would also show when `warranty_bit` flips.
 
 ### Against the A10e's sboot
 
@@ -504,7 +504,7 @@ What there is so far is the stock side. The third tablet, still locked, reports 
 avbtool calculate_vbmeta_digest --image vbmeta.img --hash_algorithm sha256
 ```
 
-So the firmware read here is exactly what a stock tablet boots. The same property read off an unlocked tablet would show whether its vbmeta is still the stock one. That hasn't been read yet.
+So the firmware read here is exactly what a stock tablet boots. One of the two unlocked tablets, a month into LineageOS, reports the same digest (read over ssh, 21 Nov 2026). The digest covers `vbmeta` and the chained partitions' own vbmeta data, so those are still the stock ones on it. `vbmeta_system` and `vbmeta_vendor` aren't in it, so this doesn't speak for them.
 
 The hash of this key is carried in the bootloader's own signed certificate. See [the chain, from the hashes](#the-chain-from-the-hashes).
 

@@ -102,7 +102,7 @@ During its flash:
 - [ ] Which key confirms the unlock. `lk`'s own "Unlock bootloader?" picture says Volume Up (21 Nov); the box wants it seen on the tablet
 - [ ] samloader-rs run in a normal terminal window, the one way it wasn't run
 - [ ] The how-to followed as written, a third time
-- [ ] What the first two tablets run today, read again. Their rows rest on October's logs
+- [ ] What the first two tablets run today, read again. Their rows rest on October's logs. One done 21 Nov over ssh: the same LineageOS 22.2 GSI build (Jan 2026), Android 15, the stock kernel. The other is still October's
 
 Finish line: the how-to has no "wasn't written down" or "may not be letter for letter" left in it.
 
@@ -110,7 +110,7 @@ Finish line: the how-to has no "wasn't written down" or "may not be letter for l
 
 The how-to's biggest gap. Only the recovery partition has ever been written back.
 
-- [ ] The `vbmeta` partition read back off an unlocked tablet, to show it's still the stock one. The stock side is read: a locked tablet's `ro.boot.vbmeta.digest` matches `avbtool calculate_vbmeta_digest` over the stock images (21 Nov). The same property off an unlocked tablet would answer this box
+- [x] The `vbmeta` partition read back off an unlocked tablet, to show it's still the stock one. Done 21 Nov through its digest: an unlocked tablet a month into LineageOS reports the stock `ro.boot.vbmeta.digest`. The stock side is read: a locked tablet's `ro.boot.vbmeta.digest` matches `avbtool calculate_vbmeta_digest` over the stock images (21 Nov). The same property off an unlocked tablet would answer this box
 - [ ] A full restore: the BL, AP and HOME_CSC bundles flashed onto a tablet running the GSI
 - [ ] Relocking the bootloader after it, and what the boot state, the Knox Guard line and `ro.boot.warranty_bit` read then
 - [ ] Picture: the flash flow redrawn with the way back as a tested lane
@@ -128,10 +128,10 @@ The boot path was read. These are the pieces beside it.
 - [ ] The second Knox Guard check, `0x9f038880`, and the second user of the flash-block message, `0x9f0179a0`
 - [ ] The other callers of command `0x20`: `0x9f1208b0` on `pm_sys`, `0x9f123d88`, and which images come through the loader `0x9f00ef18`
 - [ ] The three calls on the unlocked path that most likely draw the startup warning
-- [ ] The second `smc` at `0x9f143d40`, the 18 branches into `0x9f010c48`, what `grdm` is, and the warranty bit. Leads, not answers: `lk` adds `androidboot.grdm_status=%s` (a stock tablet's command line has `NORMAL`) and has the line `GRDM BL Auth key derived from SHK on UNISOC LK`. A separate property, `ro.security.grdm_status`, reads `FW_VER:0502`; what sets that one wasn't read. `warranty_bit` read `0` both locked and unlocked
+- [ ] The second `smc` at `0x9f143d40`, the 18 branches into `0x9f010c48`, what `grdm` is, and the warranty bit. Leads, not answers: `lk` adds `androidboot.grdm_status=%s` (a stock tablet's command line has `NORMAL`) and has the line `GRDM BL Auth key derived from SHK on UNISOC LK`. A separate property, `ro.security.grdm_status`, reads `FW_VER:0502`; what sets that one wasn't read. `warranty_bit` read `0` locked and right after the unlock, but `1` on an unlocked tablet a month into LineageOS (21 Nov)
 - [x] The 74 pictures packed in the file. Carved whole and looked at 21 Nov, described in the teardown's "Inside lk" (not committed, they're Samsung's)
 - [x] What `lk` hands the kernel on a locked, stock boot, from a bugreport's copy of the command line (21 Nov). In the teardown's "What lk hands the kernel", each key against its format string in `lk`
-- [ ] The same command line off an unlocked tablet: `flash.locked`, `ulcnt`, `warranty_bit`, `kg` and the vbmeta digest after an unlock
+- [ ] The same command line off an unlocked tablet: `flash.locked`, `ulcnt`, `warranty_bit`, `kg` and the vbmeta digest after an unlock. Half there (21 Nov): the `ro.boot.*` copies off one unlocked tablet, in the teardown's table. The rest needs a bugreport
 - [ ] Picture: the unlock diagram with its grey boxes filled
 
 Finish line: the *not read* list under "What lk does about verified boot" is empty, or each line left says why it can't be read from the file.
