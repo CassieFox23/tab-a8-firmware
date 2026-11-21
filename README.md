@@ -12,6 +12,10 @@ New to this? [The plain version](Tab-A8-teardown.md#the-plain-version) is six sh
 
 ## What it found (short version)
 
+- **None of the signed bootloader files is encrypted.** The A10e's `sboot` had an encrypted stage at the front. Here the five signed files hash to the value in their own headers, and four of the five are full of ARM64 code and plain strings. One other file, `grd_fw.img`, sits at the maximum the whole way through, and what it's for isn't known.
+
+![Entropy along each of the seven files: lk and tos are code then data, the Cortex-M4 image is 579 KiB of code and then padding, grd_fw.img sits at the maximum the whole way, teecfg is almost empty](figures/bootloader-files.png)
+
 - **The files sign each other, and you can see it without a disassembler.** One key signs the first loader, which names the key for the next four files, and the bootloader names the key for the Android images.
 
 ![The signing chain: key A signs the SPL, whose certificate names key B; key B signs sml, tos, teecfg and lk; lk's certificate names the AVB key, which signs vbmeta.img](figures/signing-chain.png)
