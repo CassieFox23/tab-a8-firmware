@@ -24,7 +24,7 @@ debugfs -R 'cat /build.prop' vendor.img
 debugfs -R 'cat /system/build.prop' system.img
 ```
 
-The device tree says the same. The `dtb` in `boot.img` has root model `Unisoc UMS512 SoC`, compatible `sprd,ums512` (900 nodes, 234 distinct `compatible` strings). `dtbo.img` carries five board overlays: `sprd,ums512-1h10`, `-1h10-go`, `-25c10`, `-2h10` and a second `-25c10`. The vendor's `ro.product.board=ums512_25c10` matches the 25c10 ones. Which of the two the tablet picks isn't read.
+The device tree says the same. The `dtb` in `boot.img` has root model `Unisoc UMS512 SoC`, compatible `sprd,ums512` (900 nodes, 234 distinct `compatible` strings). `dtbo.img` carries five board overlays: `sprd,ums512-1h10`, `-1h10-go`, `-25c10`, `-2h10` and a second `-25c10`. The vendor's `ro.product.board=ums512_25c10` matches the 25c10 ones. A third tablet, still on stock, reports `ro.boot.dtbo_idx` as `4`. The index is zero-based ([Android's overlay docs](https://source.android.com/docs/core/architecture/dto/compile)), so `lk` applies the second `-25c10` overlay. In the table, entries 0, 2 and 4 all carry id `0x1100` and rev `0`, so those fields alone don't tell entry 2 from entry 4. How `lk` chose wasn't read.
 
 ```
 python3 tools/dt_root.py boot/unpacked/dtb dtbo.img
@@ -336,6 +336,8 @@ The boot flow runs through `0x9f010c48` (it logs `SECUREBOOT_ENABLE`): it picks 
 
 So the state the tablet boots with is set by the **secure-world** check, and on an unlocked `boot`/`recovery` that check is skipped and the state is `2`. That's the orange the real tablets showed: a non-Samsung system booted and the state went orange.
 
+The locked side was seen on a third tablet, still on stock `X200XXS6DYG6` (adb, 21 Nov 2026): `ro.boot.verifiedbootstate` `green`, `ro.boot.flash.locked` `1`, `ro.boot.vbmeta.device_state` `locked`. That's a locked tablet with Samsung's images landing on state `0`, as the code reads.
+
 The number becomes a colour in `0x9f007a38`, which switches on the state and adds one string to the kernel command line:
 
 | State | String |
@@ -437,7 +439,15 @@ What `vbmeta.img` says, read with `avbtool info_image --image vbmeta.img`:
 
 That key isn't the A10e's (`e553992a79ab561a4805371cce123d1ee73db21b`).
 
-One thing seen on the real tablets, from the flash logs in the [how-to](docs/lineageos-howto.md): with the bootloader unlocked, a `system` image that isn't Samsung's booted, and no command in the logs ever wrote to `vbmeta` or turned verification off. After the unlock the tablet reported `ro.boot.verifiedbootstate` as `orange`. So once it's unlocked, the hashtree for `system` in vbmeta didn't stop a different system from starting. That's what happened, not a read of the code that decides it. And the `vbmeta` partition wasn't read back off the tablet to prove it's still the stock one.
+One thing seen on the real tablets, from the flash logs in the [how-to](docs/lineageos-howto.md): with the bootloader unlocked, a `system` image that isn't Samsung's booted, and no command in the logs ever wrote to `vbmeta` or turned verification off. After the unlock the tablet reported `ro.boot.verifiedbootstate` as `orange`. So once it's unlocked, the hashtree for `system` in vbmeta didn't stop a different system from starting. That's what happened, not a read of the code that decides it. And the `vbmeta` partition wasn't read back off an unlocked tablet to prove it's still the stock one.
+
+What there is so far is the stock side. The third tablet, still locked, reports `ro.boot.vbmeta.digest` as `9574f01495d1f0cb5b2961c76719b7a89b8250cf80295744fa80311613649ba3`, the sha256 over the vbmeta data the bootloader verified. avbtool works out the same value from the stock images, with the eight chained partitions beside `vbmeta.img` under their partition names (`pm_sys.img` is `sharkl5pro_cm4.bin`, `l_agdsp.img` is `AGCP_DSP.bin`, `prism.img` and `optics.img` come from the CSC bundle):
+
+```
+avbtool calculate_vbmeta_digest --image vbmeta.img --hash_algorithm sha256
+```
+
+So the firmware read here is exactly what a stock tablet boots. The same property read off an unlocked tablet would show whether its vbmeta is still the stock one. That hasn't been read yet.
 
 The hash of this key is carried in the bootloader's own signed certificate. See [the chain, from the hashes](#the-chain-from-the-hashes).
 
@@ -557,7 +567,9 @@ unpack_bootimg --boot_img boot.img --out boot/unpacked
 strings -n 8 boot/unpacked/kernel | grep -m1 '^Linux version'
 ```
 
-Samsung's published source for this build is the same `4.14.199` (its `Makefile`: `VERSION = 4`, `PATCHLEVEL = 14`, `SUBLEVEL = 199`) and has a `gta8wifi_eur_open_defconfig`. The `-29056031-abX200XXS6DYG6` part of the version isn't in that defconfig (`CONFIG_LOCALVERSION=""`). Where it comes from isn't traced.
+Samsung's published source for this build is the same `4.14.199` (its `Makefile`: `VERSION = 4`, `PATCHLEVEL = 14`, `SUBLEVEL = 199`) and has a `gta8wifi_eur_open_defconfig`. The `-29056031-abX200XXS6DYG6` part of the version isn't in that defconfig (`CONFIG_LOCALVERSION=""`).
+
+The running kernel's own config, read off a stock tablet's `/proc/config.gz` (21 Nov 2026), matches that defconfig line for line: all 4,083 entries agree and none are missing. The source has no `localversion` file, and the config leaves `CONFIG_LOCALVERSION` empty with `CONFIG_LOCALVERSION_AUTO` off. By `scripts/setlocalversion`, that leaves one input for the suffix: a `LOCALVERSION` variable set when the kernel was built. Samsung's build setup itself wasn't seen.
 
 *Not read yet:* Whether that source builds into this exact kernel.
 

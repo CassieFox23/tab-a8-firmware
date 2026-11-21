@@ -91,9 +91,11 @@ One more SM-X200 hasn't been unlocked yet. It can show things the first two can'
 
 While it's still locked, read-only:
 
-- [ ] The locked boot state off a real tablet: `ro.boot.verifiedbootstate` and `ro.boot.flash.locked`. The repo has only seen orange
+- [x] The locked boot state off a real tablet: `ro.boot.verifiedbootstate` and `ro.boot.flash.locked`. The repo has only seen orange. Read 21 Nov: `green`, `1`, vbmeta `locked`, in the teardown's verified-boot section
 - [ ] The Download Mode screen's lines, letter for letter. The how-to isn't sure of `KG STATE` against `KG STATUS`
-- [ ] The Widevine level on stock, so the `L3` after the flash has something to compare to
+- [x] The Widevine level on stock, so the `L3` after the flash has something to compare to. Read 21 Nov with `tools/widevine_probe`: `L1`, not provisioned. The old `L3` came from a browser log, so the probe has to run after the flash too before it's a comparison
+
+Also read off it while locked (21 Nov): `ro.boot.vbmeta.digest` matches the stock images (Phase 9's baseline), `ro.boot.dtbo_idx` `4` (Phase 11), the running kernel config against Samsung's defconfig (Phase 13), and a stock bugreport with the previous boot's kernel log, kept off the repo
 
 During its flash:
 
@@ -108,7 +110,7 @@ Finish line: the how-to has no "wasn't written down" or "may not be letter for l
 
 The how-to's biggest gap. Only the recovery partition has ever been written back.
 
-- [ ] The `vbmeta` partition read back off an unlocked tablet, to show it's still the stock one
+- [ ] The `vbmeta` partition read back off an unlocked tablet, to show it's still the stock one. The stock side is read: a locked tablet's `ro.boot.vbmeta.digest` matches `avbtool calculate_vbmeta_digest` over the stock images (21 Nov). The same property off an unlocked tablet would answer this box
 - [ ] A full restore: the BL, AP and HOME_CSC bundles flashed onto a tablet running the GSI
 - [ ] Relocking the bootloader after it, and what the boot state, the Knox Guard line and `ro.boot.warranty_bit` read then
 - [ ] Picture: the flash flow redrawn with the way back as a tested lane
@@ -126,7 +128,7 @@ The boot path was read. These are the pieces beside it.
 - [ ] The second Knox Guard check, `0x9f038880`, and the second user of the flash-block message, `0x9f0179a0`
 - [ ] The other callers of command `0x20`: `0x9f1208b0` on `pm_sys`, `0x9f123d88`, and which images come through the loader `0x9f00ef18`
 - [ ] The three calls on the unlocked path that most likely draw the startup warning
-- [ ] The second `smc` at `0x9f143d40`, the 18 branches into `0x9f010c48`, what `grdm` is, and the warranty bit
+- [ ] The second `smc` at `0x9f143d40`, the 18 branches into `0x9f010c48`, what `grdm` is, and the warranty bit. Leads, not answers: `lk` adds `androidboot.grdm_status=%s` and has the line `GRDM BL Auth key derived from SHK on UNISOC LK`, and a stock tablet reports `FW_VER:0502`. `warranty_bit` read `0` both locked and unlocked
 - [ ] The 74 pictures packed in the file
 - [ ] Picture: the unlock diagram with its grey boxes filled
 
@@ -138,7 +140,7 @@ Finish line: the *not read* list under "What lk does about verified boot" is emp
 - [ ] Inside the SPL's check: `0x10bd8`, `0x107b4` and `0x10940`, where the hashing actually runs, and what picks the mode that skips the TEE files
 - [ ] What BL31 in `sml` does between the `smc` and Trusty, and how control gets from `sml` to `lk`
 - [ ] The unparsed part of the `SignerVer02` block
-- [ ] Which of the two `25c10` overlays in `dtbo.img` the tablet picks
+- [x] Which of the two `25c10` overlays in `dtbo.img` the tablet picks. The second one, entry 4 (`ro.boot.dtbo_idx`, zero-based). How `lk` chooses it wasn't read: entries 0, 2 and 4 share id and rev
 - [ ] Picture: the boot chain with the `sml` hop drawn from code, not from strings
 
 Finish line: the power-on diagram has no grey box between the SPL and `lk`.
@@ -158,7 +160,7 @@ Small, separate, and none blocks another.
 
 - [ ] `grd_fw.img`: what it is, and whether it's encrypted or only compressed
 - [ ] The `teecfg` table and the Cortex-M4 image, both still at sizing level
-- [ ] Whether Samsung's published kernel source builds into this exact kernel, and where the `-29056031-abX200XXS6DYG6` part of its version comes from
+- [ ] Whether Samsung's published kernel source builds into this exact kernel, and where the `-29056031-abX200XXS6DYG6` part of its version comes from. So far: the running config matches the defconfig on all 4,083 entries, and the suffix can only come from a build-time `LOCALVERSION`. No build has been run
 - [ ] Android's own `checkvintf` run on the vendor and the GSI, and the per-HAL rows compared
 - [ ] The SELinux policy as the tablet runs it under LineageOS, pulled off the device. The read so far is the stock vendor's
 - [ ] Why `vbmeta_system` has no chain entry in the main vbmeta, and what the `vbmeta_vendor` partition is for, since no bundle ships an image for it

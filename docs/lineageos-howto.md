@@ -156,6 +156,8 @@ orange
 
 `flash.locked` `0` and `orange` are the unlocked bootloader. The third line is `ro.boot.warranty_bit` as the tablet reported it. What sets it wasn't read, so don't take that `0` as proof of anything.
 
+For comparison, a third tablet still locked on stock `X200XXS6DYG6` answered `1`, `green`, `0` and `1` to the same line. So `warranty_bit` read `0` before an unlock as well as after.
+
 ## 6. Flash TWRP
 
 ```
@@ -232,7 +234,7 @@ So it's Android 15 on top of the stock kernel. The vendor partition is the stock
   Density is taste: one tablet got `235`, the other `274`. The setting survived a reboot. To undo: `adb shell 'wm size reset; wm density reset'`. Why native is slow isn't known.
 
 - **The time zone** came up as Pacific/Midway on the first tablet. Set it by hand in Settings → Date & time.
-- **Widevine** read as `L3` in a browser. What it was on stock wasn't recorded, so that may or may not be a change.
+- **Widevine** read as `L3` in a browser's log. On stock, a third tablet reports `L1` through Android's own `MediaDrm` ([`tools/widevine_probe`](../tools/widevine_probe/)), with OEMCrypto API 16, but it was never provisioned, so it can't open a session yet. That's two different instruments, so it isn't a before and after: the probe hasn't been run on a flashed tablet.
 - Wifi, touch, sound, rotation and sleep got an "everything works" by hand, not a test each.
 
 ## Going back to stock
