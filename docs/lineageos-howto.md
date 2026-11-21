@@ -127,6 +127,15 @@ It ends with `recovery flash successful` and the tablet reboots. The first time 
 
 `38` is the recovery partition's id in this tablet's partition table. It's in the [partition map](partition-map.md), in the second column next to the name, not the row number in the first. A wrong number writes to a different partition, so check yours before using it (`samloader print-pit -f <your .pit file>` prints the table; the `.pit` file is in the CSC bundle).
 
+You can also read the table off the tablet itself, in Download Mode. By samloader's own description it only dumps the table, and it reboots the tablet when it's done:
+
+```
+samloader dump-pit --output device.pit
+samloader print-pit -f device.pit
+```
+
+On a third tablet, still on stock, the header and all 58 entries matched the CSC bundle's `.pit` byte for byte, with `recovery` at id `38`. Only the signature block after the entries differs: the tablet's names an older build, `X200XXU1AVG1`, signed in 2022.
+
 ## 5. Unlock the bootloader
 
 **This wipes the tablet.**

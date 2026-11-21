@@ -95,7 +95,7 @@ While it's still locked, read-only:
 - [ ] The Download Mode screen's lines, letter for letter. The how-to isn't sure of `KG STATE` against `KG STATUS`
 - [x] The Widevine level on stock, so the `L3` after the flash has something to compare to. Read 21 Nov with `tools/widevine_probe`: `L1`, not provisioned. The old `L3` came from a browser log, so the probe has to run after the flash too before it's a comparison
 
-Also read off it while locked (21 Nov): `ro.boot.vbmeta.digest` matches the stock images (Phase 9's baseline), `ro.boot.dtbo_idx` `4` (Phase 11), the running kernel config against Samsung's defconfig (Phase 13), and a stock bugreport with the previous boot's kernel log, kept off the repo
+Also read off it while locked (21 Nov): `ro.boot.vbmeta.digest` matches the stock images (Phase 9's baseline), `ro.boot.dtbo_idx` `4` (Phase 11), the running kernel config against Samsung's defconfig (Phase 13), and a stock bugreport with the previous boot's kernel log, kept off the repo. Its own PIT, dumped in Download Mode, matches the CSC bundle's entries byte for byte (`recovery` is id `38`); its signature block names `X200XXU1AVG1`
 
 During its flash:
 
