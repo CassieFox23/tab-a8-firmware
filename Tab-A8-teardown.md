@@ -463,6 +463,24 @@ What `vbmeta.img` says, read with `avbtool info_image --image vbmeta.img`:
 
 `vbmeta_system.img` is signed with the same key and carries the same three hashtrees again (`system`, `vendor`, `product`). The main vbmeta has no chain entry pointing at it.
 
+It doesn't need one, because Android's first-stage init asks for it by name. The stock boot ramdisk carries its own `fstab.ums512_25c10`, and its mount lines say which vbmeta checks what:
+
+```
+system   /system  ext4  ro  wait,avb=vbmeta_system,logical,first_stage_mount,avb_keys=/avb/q-gsi.avbpubkey:/avb/r-gsi.avbpubkey:/avb/s-gsi.avbpubkey
+vendor   /vendor  ext4  ro  wait,avb=vbmeta_vendor,logical,first_stage_mount
+product  /product ext4  ro  wait,avb=vbmeta,logical,first_stage_mount
+```
+
+```
+gzip -dc boot/unpacked/ramdisk | cpio -id fstab.ums512_25c10 init
+```
+
+So `system` is checked against `vbmeta_system`, `vendor` against `vbmeta_vendor`, and `product` against the main vbmeta. A copy of the same fstab sits in `/vendor/etc/` (read off the stock tablet, 21 Nov 2026), but it differs: its `vendor` and `product` lines say plain `avb`. First-stage init mounts `/vendor` itself, so it can't be reading the copy inside it. That's reasoning, not a read of init's code.
+
+What's on a real tablet's `vbmeta_vendor` partition wasn't read: no bundle ships an image for it, `lk` logs it as skipped, and shell can't read the block device. The `avb_keys` on the `system` line name Google's GSI keys, but the ramdisk has no `/avb/` folder with them in it.
+
+The ramdisk's `init` is AOSP's (its strings carry `system/core/fs_mgr/libfs_avb/` paths), and it has the lines `Allow signature verification error when the device is unlocked` and `Allow invalid metadata when the device is unlocked`. That's the likely way a different `system` gets through once unlocked. Which branch runs would show in an unlocked tablet's boot log, and that hasn't been read.
+
 That key isn't the A10e's (`e553992a79ab561a4805371cce123d1ee73db21b`).
 
 One thing seen on the real tablets, from the flash logs in the [how-to](docs/lineageos-howto.md): with the bootloader unlocked, a `system` image that isn't Samsung's booted, and no command in the logs ever wrote to `vbmeta` or turned verification off. After the unlock the tablet reported `ro.boot.verifiedbootstate` as `orange`. So once it's unlocked, the hashtree for `system` in vbmeta didn't stop a different system from starting. That's what happened, not a read of the code that decides it. And the `vbmeta` partition wasn't read back off an unlocked tablet to prove it's still the stock one.

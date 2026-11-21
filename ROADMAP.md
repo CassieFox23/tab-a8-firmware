@@ -123,7 +123,7 @@ The boot path was read. These are the pieces beside it.
 
 - [ ] The unlock itself: what runs between the long press and the wipe, and what writes the record in `miscdata` and the switch byte in `persistent`
 - [ ] `0x9f01082c`, the small function that sets the unlocked flag on the boot path
-- [ ] What lets a different `system` through once unlocked. The skipped check is on `boot`, and the code that deals with the hashtree wasn't read
+- [ ] What lets a different `system` through once unlocked. The skipped check is on `boot`, and the code that deals with the hashtree wasn't read. Lead (21 Nov): the stock ramdisk's `init` is AOSP's `libfs_avb` with `Allow signature verification error when the device is unlocked`. An unlocked tablet's boot log would show if that's the line that runs
 - [ ] The key-trust slot at `0x9f9ae060` + `0x30`, which only exists while `lk` runs
 - [ ] The second Knox Guard check, `0x9f038880`, and the second user of the flash-block message, `0x9f0179a0`
 - [ ] The other callers of command `0x20`: `0x9f1208b0` on `pm_sys`, `0x9f123d88`, and which images come through the loader `0x9f00ef18`
@@ -165,6 +165,6 @@ Small, separate, and none blocks another.
 - [ ] Whether Samsung's published kernel source builds into this exact kernel, and where the `-29056031-abX200XXS6DYG6` part of its version comes from. So far: the running config matches the defconfig on all 4,083 entries, and the suffix can only come from a build-time `LOCALVERSION`. No build has been run
 - [ ] Android's own `checkvintf` run on the vendor and the GSI, and the per-HAL rows compared
 - [ ] The SELinux policy as the tablet runs it under LineageOS, pulled off the device. The read so far is the stock vendor's
-- [ ] Why `vbmeta_system` has no chain entry in the main vbmeta, and what the `vbmeta_vendor` partition is for, since no bundle ships an image for it
+- [x] Why `vbmeta_system` has no chain entry in the main vbmeta, and what the `vbmeta_vendor` partition is for, since no bundle ships an image for it. The boot ramdisk's fstab names them: `system` is checked against `vbmeta_system`, `vendor` against `vbmeta_vendor` (21 Nov). What's on a real tablet's `vbmeta_vendor` wasn't read
 
 Finish line: each one is answered in the teardown or moved to its "what didn't work" section with what was tried.
