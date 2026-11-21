@@ -406,7 +406,7 @@ the other two were found by scanning for loads of `0x9f435010` and then decompil
 
 | | A10e `sboot` | Tab A8 |
 |---|---|---|
-| shape | one 4 MiB image with an encrypted stage at the front | separate files per stage, none of the signed ones encrypted |
+| shape | one 4 MB image with an encrypted stage near the front | separate files per stage, none of the signed ones encrypted |
 | finding the load address | one address, and the page phase was the trap | two addresses, same trap in the SPL (phase `0x700`) |
 | who checks the vbmeta key | the bootloader itself, calling libavb | both, and the secure world's answer sets the boot state: `lk` hands the image to the secure world (command `0x20`) and the state comes from that; its own libavb runs too, checking the signature and building the cmdline |
 | who holds the unlock state | read inside the bootloader | a record in `miscdata` that the secure world judges |
@@ -528,7 +528,7 @@ what talks to Trusty: the IPC node `/dev/trusty-ipc-dev0` and the shared-memory 
 
 the fence around it holds, read the same way the A10e's was:
 
-- **no app domain reaches the TEE at all.** across `untrusted_app` and its variants (`_25`/`_27`/`_29`, `sec_`, `filtered_`, `vzwfiltered_`), `isolated_app`, `ephemeral_app`, `priv_app` and `platform_app`, there is **not one `allow` rule** on `teetz_device`, on the RPMB node, or on the `rpmbserver` socket. and here the Unix modes back SELinux up - the nodes are `0660 system:system`, so an app (not in `system`) is already shut out even before the policy, unlike the A10e where the TrustZone nodes were mode `0666` and SELinux was the only fence.
+- **no app domain reaches the TEE at all.** across `untrusted_app` and its variants (`_25`/`_27`/`_29`, `sec_`, `filtered_`, `vzwfiltered_`), `isolated_app`, `ephemeral_app`, `priv_app` and `platform_app`, there is **not one `allow` rule** on `teetz_device`, on the RPMB node, or on the `rpmbserver` socket. and here the Unix modes back SELinux up - the nodes are `0660 system:system`, so an app (not in `system`) is already shut out even before the policy, unlike the A10e, where most of the TrustZone nodes were mode `0666` and SELinux was the main fence.
 - **of the HALs that touch the TEE, an app can discover only the media ones.** in all `untrusted_app` can `find` 15 hwservice types (`sesearch -A -s untrusted_app -c hwservice_manager -p find`); this point is about the ones behind the TEE nodes. `untrusted_app` has no `hwservice_manager find` on keymaster, gatekeeper, the Unisoc trusty client, or any of Samsung's `drk`/`sem`/`wvkprov`/`engmode`/`vaultkeeper` services - all denied. the TEE-touching HALs it *can* find are for protected media: Widevine DRM (`hal_drm`) and the codec HAL (`mediacodec`) both hold `teetz_device` access, and CAS reaches a `tee_device` type that no node here carries. so an app's one path toward the secure world is content protection, never keys or the lock state.
 - **the one sanctioned route to keys** is the normal Android one: an app makes a binder call to `keystore` (allowed) and finds `keystore_service` (allowed); `keystore` calls the `keymaster` HAL (`keystore → hal_keymaster_server:binder`) and also holds its own `teetz_device` access. there's no `keystore2` domain on this build - it's the older `keystore`.
 - the `rpmbserver` socket is mode `0666`, but only `init`/`vendor_init` have `sock_file` rules on it and nothing in `appdomain` can `connectto` the `tee` domain, so the open mode is unreachable in practice.
