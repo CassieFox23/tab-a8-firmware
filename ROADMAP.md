@@ -130,6 +130,8 @@ The boot path was read. These are the pieces beside it.
 - [ ] The three calls on the unlocked path that most likely draw the startup warning
 - [ ] The second `smc` at `0x9f143d40`, the 18 branches into `0x9f010c48`, what `grdm` is, and the warranty bit. Leads, not answers: `lk` adds `androidboot.grdm_status=%s` (a stock tablet's command line has `NORMAL`) and has the line `GRDM BL Auth key derived from SHK on UNISOC LK`. A separate property, `ro.security.grdm_status`, reads `FW_VER:0502`; what sets that one wasn't read. `warranty_bit` read `0` both locked and unlocked
 - [ ] The 74 pictures packed in the file
+- [x] What `lk` hands the kernel on a locked, stock boot, from a bugreport's copy of the command line (21 Nov). In the teardown's "What lk hands the kernel", each key against its format string in `lk`
+- [ ] The same command line off an unlocked tablet: `flash.locked`, `ulcnt`, `warranty_bit`, `kg` and the vbmeta digest after an unlock
 - [ ] Picture: the unlock diagram with its grey boxes filled
 
 Finish line: the *not read* list under "What lk does about verified boot" is empty, or each line left says why it can't be read from the file.
